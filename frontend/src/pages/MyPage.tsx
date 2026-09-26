@@ -13,6 +13,7 @@ import './MyPage.css'
 
 type HeroProfile = {
   role: 'hero' | 'citizen'
+  profileName: string
   skills: string[]
   reward: string
 }
@@ -54,6 +55,7 @@ export default function MyPage() {
       setStats(readUserStats(data))
       setProfile({
         role: data?.role === 'hero' ? 'hero' : 'citizen',
+        profileName: typeof data?.profileName === 'string' ? data.profileName : '',
         skills: Array.isArray(data?.skills) ? data.skills.filter((skill): skill is string => typeof skill === 'string') : [],
         reward: typeof data?.reward === 'string' ? data.reward : '',
       })
@@ -66,7 +68,7 @@ export default function MyPage() {
   if (loading) return <p>読み込み中...</p>
   if (!user) return <p>ログインしてください</p>
 
-  const displayName = user.displayName || '名前未設定'
+  const displayName = profile?.profileName || user.displayName || '名前未設定'
   const ratingLabel = stats.ratingCount > 0 ? (stats.ratingSum / stats.ratingCount).toFixed(1) : '—'
 
   return (
@@ -89,7 +91,6 @@ export default function MyPage() {
             </div>
             <div className="profile-card__account-details">
               <p className="profile-card__name">{displayName}</p>
-              <p className="profile-card__email">{user.email || 'メールアドレス未設定'}</p>
             </div>
           </div>
           {profile?.role === 'hero' && (
