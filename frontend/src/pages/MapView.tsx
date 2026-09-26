@@ -9,6 +9,13 @@ import './MapView.css'
 
 type Position = { latitude: number; longitude: number; accuracy: number }
 type HelpPin = { id: string; title: string; latitude: number; longitude: number }
+type HeroPin = {
+  id: string
+  name: string
+  skills: string[]
+  latitude: number
+  longitude: number
+}
 
 // 位置情報を許可していない場合も、地図は閲覧できる。
 const DEFAULT_CENTER: [number, number] = [34.6946, 135.1955]
@@ -35,6 +42,7 @@ export default function MapView() {
   const [locationError, setLocationError] = useState('')
   const [view, setView] = useState<'map' | 'list'>('map')
   const [helpPins, setHelpPins] = useState<HelpPin[]>([])
+  const [heroPins, setHeroPins] = useState<HeroPin[]>([])
   const active = useRef(true)
   const requestPending = useRef(false)
 
@@ -92,6 +100,33 @@ export default function MapView() {
     }, () => setHelpPins([]))
   }, [])
 
+  useEffect(() => {
+    const heroesQuery = query(collection(db, 'userProfiles'), where('role', '==', 'hero'))
+    return onSnapshot(heroesQuery, (snapshot) => {
+      setHeroPins(snapshot.docs.flatMap((hero) => {
+        const data = hero.data()
+        const location = data.heroLocation
+        if (
+          !location
+          || typeof location.latitude !== 'number'
+          || typeof location.longitude !== 'number'
+        ) return []
+
+        return [{
+          id: hero.id,
+          name: typeof data.profileName === 'string' && data.profileName.trim()
+            ? data.profileName
+            : 'ヒーロー',
+          skills: Array.isArray(data.skills)
+            ? data.skills.filter((skill): skill is string => typeof skill === 'string')
+            : [],
+          latitude: location.latitude,
+          longitude: location.longitude,
+        }]
+      }))
+    }, () => setHeroPins([]))
+  }, [])
+
   const coordinates: [number, number] | null = position ? [position.latitude, position.longitude] : null
 
   return (
@@ -126,6 +161,20 @@ export default function MapView() {
           {helpPins.map((help) => (
             <CircleMarker key={help.id} center={[help.latitude, help.longitude]} radius={18} pathOptions={{ color: '#073f34', weight: 4, fillColor: '#0a9566', fillOpacity: 1 }}>
               <Popup>{help.title}</Popup>
+            </CircleMarker>
+          ))}
+          {heroPins.map((hero) => (
+            <CircleMarker
+              key={hero.id}
+              center={[hero.latitude, hero.longitude]}
+              radius={11}
+              pathOptions={{ color: '#7f1d1d', weight: 3, fillColor: '#dc2626', fillOpacity: 1 }}
+            >
+              <Popup>
+                <strong>{hero.name}</strong>
+                <br />
+                {hero.skills.length ? `得意なこと：${hero.skills.join('、')}` : 'ヒーローとして活動中'}
+              </Popup>
             </CircleMarker>
           ))}
           {coordinates && position && <>

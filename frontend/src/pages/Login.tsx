@@ -19,6 +19,10 @@ type SavedOnboarding = {
   skills: string[]
   gender: string
   reward: string
+  heroLocation?: {
+    latitude: number
+    longitude: number
+  }
 }
 
 function readSavedOnboarding(): SavedOnboarding | null {
@@ -34,9 +38,15 @@ function readSavedOnboarding(): SavedOnboarding | null {
     const skills = Array.isArray(data.skills) ? data.skills.filter((item): item is string => typeof item === 'string') : []
     const gender = typeof data.gender === 'string' ? data.gender : ''
     const reward = typeof data.reward === 'string' ? data.reward : ''
+    const location = typeof data.heroLocation === 'object' && data.heroLocation !== null
+      ? data.heroLocation as Record<string, unknown>
+      : null
+    const heroLocation = typeof location?.latitude === 'number' && typeof location.longitude === 'number'
+      ? { latitude: location.latitude, longitude: location.longitude }
+      : undefined
 
     if (!role || !name || !gender) return null
-    return { role, name, skills, gender, reward }
+    return { role, name, skills, gender, reward, heroLocation }
   } catch {
     return null
   }
@@ -52,6 +62,21 @@ function loginErrorMessage(error: unknown) {
   if (code === 'auth/unauthorized-domain') return 'このURLではログインできません。アプリのURL設定を確認してください。'
   if (code === 'auth/operation-not-allowed') return 'Googleログインの設定がまだ有効になっていません。'
   return 'ログインできませんでした。通信状況を確認して、もう一度お試しください。'
+}
+
+function getCurrentLocation(): Promise<{ latitude: number; longitude: number } | undefined> {
+  if (!navigator.geolocation) return Promise.resolve(undefined)
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({
+        latitude: Number(coords.latitude.toFixed(3)),
+        longitude: Number(coords.longitude.toFixed(3)),
+      }),
+      () => resolve(undefined),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    )
+  })
 }
 
 export default function Login() {
@@ -105,12 +130,15 @@ export default function Login() {
       return
     }
 
+    const heroLocation = role === 'hero' ? await getCurrentLocation() : undefined
+
     sessionStorage.setItem('nearu-onboarding', JSON.stringify({
       role,
       name: name.trim(),
       skills: role === 'hero' ? [skill === 'その他（自由入力）' ? customSkill.trim() : skill] : [],
       gender,
       reward: role === 'hero' ? (reward === 'その他（自由入力）' ? customReward.trim() : reward) : '',
+      heroLocation,
     }))
     await handleLogin()
   }

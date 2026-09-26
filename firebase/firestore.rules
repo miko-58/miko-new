@@ -131,8 +131,8 @@ service cloud.firestore {
     }
 
     match /userProfiles/{userId} {
-      // マイページの回数・評価は本人だけが読める。
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // ヒーローの公開プロフィールは、ログイン済みユーザーが地図上で確認できる。
+      allow read: if request.auth != null;
 
       function initialHelperCount() {
         let data = request.resource.data;
