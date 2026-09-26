@@ -42,9 +42,6 @@
 .messages-card__post { margin-top: 3px; font-size: 11px; color: #63766c; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .messages-card__latest p { margin-top: 6px; font-size: 14px; color: #454f48; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .messages-card__arrow { font-size: 32px; font-weight: 900; }
-.messages-screen .bottom-nav { display: flex; flex-shrink: 0; margin: 0 18px calc(12px + env(safe-area-inset-bottom, 0px)); padding: 0; overflow: hidden; border: 3px solid #07332e; border-radius: 34px; background: #fffef8; box-shadow: 0 3px 0 #07332e; }
-.messages-screen .bottom-nav__item { padding: 12px 3px; border-radius: 26px; color: #07332e; font-weight: 800; }
-.messages-screen .bottom-nav__item.is-active { background: #ffd33d; box-shadow: inset 0 0 0 2px #07332e; }
 @media (max-width: 360px) {
   .messages-screen .messages-header { padding-right: 35px; padding-left: 35px; }
   .messages-decoration { right: 10px; font-size: 24px; }

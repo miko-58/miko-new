@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { collection, doc, onSnapshot, orderBy, query, Timestamp } from 'firebase/firestore'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { BackIcon, SendIcon, LocationIcon, ChatIcon, UserIcon } from '../components/icons'
+import { BackIcon, SendIcon, UserIcon } from '../components/icons'
 import nearuLogo from '../assets/nearu-logo.png'
 import { useAuth } from '../contexts/AuthContext'
 import { db } from '../lib/firebase'
 import { DirectChatError, endDirectChat, partnerName, MAX_MESSAGE_LENGTH, readDirectChat, sendDirectMessage, startDirectChat, type DirectChat } from '../lib/directChat'
 import './Chat.css'
+import BottomNav from '../components/BottomNav'
 
 type Message = {
   id: string
@@ -195,13 +196,8 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
           />
           <button type="submit" className="icon-btn icon-btn--accent" aria-label="送信" disabled={!canSend || sending || !draft.trim()}><SendIcon /></button>
         </form>
-        <p id="chat-input-hint" className="chat-input-hint">Enterで改行・Ctrl / ⌘ + Enterで送信<span>{draft.length} / {MAX_MESSAGE_LENGTH}</span></p>
       </>}
-      <nav className="chat-nav" aria-label="メインナビゲーション">
-        <Link to="/map"><LocationIcon /><span>地図</span></Link>
-        <Link to="/messages" className="is-active" aria-current="true"><ChatIcon /><span>メッセージ</span></Link>
-        <Link to="/mypage"><UserIcon /><span>マイページ</span></Link>
-      </nav>
+      <BottomNav />
     </div>
   )
 }

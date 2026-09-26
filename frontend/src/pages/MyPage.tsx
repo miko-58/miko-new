@@ -23,6 +23,91 @@ const menuItems = [
   { label: '設定', Icon: SettingsIcon },
 ]
 
+function HeroMyPage({
+  user,
+  profile,
+  displayName,
+  stats,
+  failedPhotoURL,
+  onPhotoError,
+  onLogout,
+  isLoggingOut,
+  logoutError,
+}: {
+  user: NonNullable<ReturnType<typeof useAuth>['user']>
+  profile: HeroProfile
+  displayName: string
+  stats: UserStats
+  failedPhotoURL: string | null
+  onPhotoError: () => void
+  onLogout: () => void
+  isLoggingOut: boolean
+  logoutError: string
+}) {
+  const joinedAt = user.metadata.creationTime ? new Date(user.metadata.creationTime) : null
+  const joinedLabel = joinedAt && !Number.isNaN(joinedAt.getTime())
+    ? `${joinedAt.getFullYear()}年${joinedAt.getMonth() + 1}月に参加`
+    : 'Nearuに参加'
+
+  return <div className="screen screen--narrow hero-my-page">
+    <div className="screen__scroll hero-my-page__content">
+      <div className="hero-my-page__topbar">
+        <h1>マイページ</h1>
+        <details className="hero-my-page__settings">
+          <summary aria-label="設定"><SettingsIcon aria-hidden="true" /></summary>
+          <div>
+            <button type="button" onClick={onLogout} disabled={isLoggingOut}>{isLoggingOut ? 'ログアウト中…' : 'ログアウト'}</button>
+            {logoutError && <p role="alert">{logoutError}</p>}
+          </div>
+        </details>
+      </div>
+      <section className="hero-my-page__profile" aria-label="ヒーロープロフィール">
+        <img className="hero-my-page__banner" src="/images/profile-hero-banner.png" alt="" />
+        <div className="hero-my-page__identity">
+          <div className="hero-my-page__avatar">
+            {user.photoURL && user.photoURL !== failedPhotoURL
+              ? <img src={user.photoURL} alt={`${displayName}のプロフィール画像`} referrerPolicy="no-referrer" onError={onPhotoError} />
+              : <span aria-hidden="true">{Array.from(displayName)[0]}</span>}
+            <button type="button" className="hero-my-page__edit" aria-label="プロフィールを編集">✎</button>
+          </div>
+          <h1>{displayName}</h1>
+          <p className="hero-my-page__role">ヒーロー</p>
+          <p className="hero-my-page__meta">ID {user.uid.slice(0, 12)}</p>
+          <p className="hero-my-page__meta">{joinedLabel}</p>
+        </div>
+        <div className="hero-my-page__facts">
+          <div className="hero-my-page__fact hero-my-page__fact--reward">
+            <span className="hero-my-page__fact-icon" aria-hidden="true">◉</span>
+            <div><p>報酬</p><strong>{profile.reward || '未登録'}</strong></div>
+          </div>
+          <div className="hero-my-page__fact hero-my-page__fact--skill">
+            <span className="hero-my-page__fact-icon" aria-hidden="true">⚔</span>
+            <div><p>得意なこと</p><strong>{profile.skills.length ? profile.skills.join('・') : '未登録'}</strong></div>
+          </div>
+          <div className="hero-my-page__fact hero-my-page__fact--gender">
+            <span className="hero-my-page__fact-icon" aria-hidden="true">●</span>
+            <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
+          </div>
+        </div>
+      </section>
+      <section className="hero-my-page__activity" aria-labelledby="hero-activity-title">
+        <h2 id="hero-activity-title">あなたの活動</h2>
+        <div className="hero-my-page__activity-grid">
+          <div className="hero-my-page__activity-card hero-my-page__activity-card--helped">
+            <span aria-hidden="true">🤝</span>
+            <div><strong>{stats.helpedCount}</strong><p>助けた回数</p></div>
+          </div>
+          <div className="hero-my-page__activity-card hero-my-page__activity-card--rated">
+            <span aria-hidden="true">★</span>
+            <div><strong>{stats.ratingCount}</strong><p>評価をもらった数</p></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <BottomNav />
+  </div>
+}
+
 export default function MyPage() {
   const { user, loading } = useAuth()
   const [failedPhotoURL, setFailedPhotoURL] = useState<string | null>(null)
@@ -82,6 +167,20 @@ export default function MyPage() {
     { kind: 'rating' as const, label: '評価', value: ratingLabel, unit: '' },
   ]
 
+  if (profile?.role === 'hero') {
+    return <HeroMyPage
+      user={user}
+      profile={profile}
+      displayName={displayName}
+      stats={stats}
+      failedPhotoURL={failedPhotoURL}
+      onPhotoError={() => setFailedPhotoURL(user.photoURL)}
+      onLogout={() => void handleLogout()}
+      isLoggingOut={isLoggingOut}
+      logoutError={logoutError}
+    />
+  }
+
   return (
     <div className="screen screen--narrow my-page">
       <div className="screen__scroll my-page__content">
@@ -105,30 +204,11 @@ export default function MyPage() {
             </div>
           </div>
           {profile && (
-            <div className={`hero-profile-details${profile.role === 'citizen' ? ' hero-profile-details--citizen' : ''}`}>
-              {profile.role === 'hero' ? (
-                <>
-                  <div className="hero-profile-details__item">
-                    <span className="hero-profile-details__label">得意なこと</span>
-                    <span className="hero-profile-details__value">
-                      {profile.skills.length > 0 ? profile.skills.join('・') : '登録なし'}
-                    </span>
-                  </div>
-                  <div className="hero-profile-details__item">
-                    <span className="hero-profile-details__label">報酬</span>
-                    <span className="hero-profile-details__value">{profile.reward || '相談して決める'}</span>
-                  </div>
-                  <div className="hero-profile-details__item">
-                    <span className="hero-profile-details__label">性別</span>
-                    <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
-                  </div>
-                </>
-              ) : (
-                <div className="hero-profile-details__item">
-                  <span className="hero-profile-details__label">性別</span>
-                  <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
-                </div>
-              )}
+            <div className="hero-profile-details hero-profile-details--citizen">
+              <div className="hero-profile-details__item">
+                <span className="hero-profile-details__label">性別</span>
+                <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
+              </div>
             </div>
           )}
           <div className={`profile-card__stats profile-card__stats--${statItems.length}`}>

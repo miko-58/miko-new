@@ -173,9 +173,10 @@ p {
 .bottom-nav {
   display: flex;
   flex-shrink: 0;
-  border-top: 1px solid var(--line);
-  background: #fff;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  gap: 12px;
+  border-top: 3px solid #092f32;
+  background: #fffefa;
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom, 0px));
 }
 
 .bottom-nav__item {
@@ -184,16 +185,21 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
   padding: 6px 2px;
   text-decoration: none;
-  color: var(--text-muted);
-  font-size: 10.5px;
-  border-radius: var(--radius-sm);
+  color: #092f32;
+  font-size: 12px;
+  font-weight: 900;
+  border-radius: 18px;
 }
 
+.bottom-nav__item svg { width: 30px; height: 30px; stroke-width: 2.5; }
+
 .bottom-nav__item.is-active {
-  color: var(--accent);
+  color: #092f32;
+  background: #ffe36c;
 }
 
 @media (min-width: 880px) {
