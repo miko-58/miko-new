@@ -1,4 +1,7 @@
 .my-page {
+  width: 100%;
+  max-width: none;
+  align-self: stretch;
   background: url('/images/mypage-background.png') center / cover fixed;
 }
 
