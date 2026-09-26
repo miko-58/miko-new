@@ -6,19 +6,13 @@ import { auth, db } from '../lib/firebase'
 import { emptyUserStats, readUserStats, type UserStats } from '../lib/userProfile'
 import BottomNav from '../components/BottomNav'
 import {
-  BellIcon,
   ChevronRightIcon,
-  HeartIcon,
-  QuestionIcon,
   SettingsIcon,
 } from '../components/icons'
 import './MyPage.css'
 
 const menuItems = [
-  { label: 'お気に入り', Icon: HeartIcon },
-  { label: 'お知らせ', Icon: BellIcon },
   { label: '設定', Icon: SettingsIcon },
-  { label: 'ヘルプ', Icon: QuestionIcon },
 ]
 
 export default function MyPage() {
