@@ -155,7 +155,9 @@
   position: relative;
   min-height: 250px;
   flex: 0 0 min(60vh, 66.666vw);
-  background: url('/images/first-screen-art.png') center top / cover no-repeat;
+  /* The onboarding illustration includes the logo, characters and CTA artwork.
+     `cover` enlarged it to fill wide viewports and cut those elements off. */
+  background: #fffdf5 url('/images/first-screen-art.png') center / contain no-repeat;
   border-bottom: 3px solid #1d2c2a;
   box-shadow: 0 16px 28px rgba(45, 66, 60, .16);
 }
@@ -272,8 +274,8 @@
   .role-screen__art {
     min-height: 0;
     flex: 0 0 min(56vw, 230px);
-    background-size: 130% auto;
-    background-position: center top;
+    background-size: contain;
+    background-position: center;
     background-color: #fffdf5;
   }
   .role-screen__choices { grid-template-columns: 1fr; gap: 10px; padding-inline: 16px; }
