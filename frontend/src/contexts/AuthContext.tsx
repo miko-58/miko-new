@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
-import { auth } from '../lib/firebase'
+import { auth, authPersistenceReady } from '../lib/firebase'
 import { ensureUserProfile } from '../lib/userProfile'
 
 type AuthContextValue = {
@@ -21,18 +21,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      setLoading(false)
+    let unsubscribe: (() => void) | undefined
+    let cancelled = false
 
-      if (currentUser) {
-        void ensureUserProfile(currentUser).catch((error) => {
-          console.error('Failed to prepare user profile', error)
-        })
-      }
+    void authPersistenceReady.then(() => {
+      if (cancelled) return
+
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser)
+        setLoading(false)
+
+        if (currentUser) {
+          void ensureUserProfile(currentUser).catch((error) => {
+            console.error('Failed to prepare user profile', error)
+          })
+        }
+      })
+    }).catch((error) => {
+      console.error('Failed to initialize auth persistence', error)
+      if (!cancelled) setLoading(false)
     })
 
-    return unsubscribe
+    return () => {
+      cancelled = true
+      unsubscribe?.()
+    }
   }, [])
 
   return (

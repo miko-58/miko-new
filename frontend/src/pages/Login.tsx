@@ -15,6 +15,35 @@ type LoginStep = 'role' | 'profile'
 const heroSkills = ['買い物サポート', '荷物を運ぶ', 'スマホ・PCサポート', '話し相手', '道案内', 'その他（自由入力）']
 const rewardOptions = ['無償・気持ちで', 'お礼のお菓子', 'コーヒー1杯', '相談して決める', 'その他（自由入力）']
 
+type SavedOnboarding = {
+  role: Role
+  name: string
+  skills: string[]
+  gender: string
+  reward: string
+}
+
+function readSavedOnboarding(): SavedOnboarding | null {
+  try {
+    const raw = sessionStorage.getItem('nearu-onboarding')
+    if (!raw) return null
+
+    const value: unknown = JSON.parse(raw)
+    if (typeof value !== 'object' || value === null) return null
+    const data = value as Record<string, unknown>
+    const role = data.role === 'hero' || data.role === 'citizen' ? data.role : null
+    const name = typeof data.name === 'string' ? data.name : ''
+    const skills = Array.isArray(data.skills) ? data.skills.filter((item): item is string => typeof item === 'string') : []
+    const gender = typeof data.gender === 'string' ? data.gender : ''
+    const reward = typeof data.reward === 'string' ? data.reward : ''
+
+    if (!role || !name || !gender) return null
+    return { role, name, skills, gender, reward }
+  } catch {
+    return null
+  }
+}
+
 function isMobileBrowser() {
   return window.matchMedia?.('(pointer: coarse)').matches
     || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -34,14 +63,15 @@ function loginErrorMessage(error: unknown) {
 
 export default function Login() {
   const [pending, setPending] = useState(false)
-  const [step, setStep] = useState<LoginStep>('role')
-  const [role, setRole] = useState<Role | null>(null)
-  const [name, setName] = useState('')
+  const savedOnboarding = readSavedOnboarding()
+  const [step, setStep] = useState<LoginStep>(() => savedOnboarding ? 'profile' : 'role')
+  const [role, setRole] = useState<Role | null>(() => savedOnboarding?.role ?? null)
+  const [name, setName] = useState(() => savedOnboarding?.name ?? '')
   const [photoUrl, setPhotoUrl] = useState('')
-  const [skill, setSkill] = useState('')
+  const [skill, setSkill] = useState(() => savedOnboarding?.skills[0] ?? '')
   const [customSkill, setCustomSkill] = useState('')
-  const [gender, setGender] = useState('')
-  const [reward, setReward] = useState('')
+  const [gender, setGender] = useState(() => savedOnboarding?.gender ?? '')
+  const [reward, setReward] = useState(() => savedOnboarding?.reward ?? '')
   const [customReward, setCustomReward] = useState('')
   const [profileError, setProfileError] = useState('')
 
