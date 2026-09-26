@@ -95,22 +95,31 @@ export default function MyPage() {
               <p className="profile-card__name">{displayName}</p>
             </div>
           </div>
-          {profile?.role === 'hero' && (
-            <div className="hero-profile-details">
-              <div className="hero-profile-details__item">
-                <span className="hero-profile-details__label">得意なこと</span>
-                <span className="hero-profile-details__value">
-                  {profile.skills.length > 0 ? profile.skills.join('・') : '登録なし'}
-                </span>
-              </div>
-              <div className="hero-profile-details__item">
-                <span className="hero-profile-details__label">報酬</span>
-                <span className="hero-profile-details__value">{profile.reward || '相談して決める'}</span>
-              </div>
-              <div className="hero-profile-details__item">
-                <span className="hero-profile-details__label">性別</span>
-                <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
-              </div>
+          {profile && (
+            <div className={`hero-profile-details${profile.role === 'citizen' ? ' hero-profile-details--citizen' : ''}`}>
+              {profile.role === 'hero' ? (
+                <>
+                  <div className="hero-profile-details__item">
+                    <span className="hero-profile-details__label">得意なこと</span>
+                    <span className="hero-profile-details__value">
+                      {profile.skills.length > 0 ? profile.skills.join('・') : '登録なし'}
+                    </span>
+                  </div>
+                  <div className="hero-profile-details__item">
+                    <span className="hero-profile-details__label">報酬</span>
+                    <span className="hero-profile-details__value">{profile.reward || '相談して決める'}</span>
+                  </div>
+                  <div className="hero-profile-details__item">
+                    <span className="hero-profile-details__label">性別</span>
+                    <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="hero-profile-details__item">
+                  <span className="hero-profile-details__label">性別</span>
+                  <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
+                </div>
+              )}
             </div>
           )}
           <div className="profile-card__stats">

@@ -108,7 +108,7 @@
 }
 
 .my-page .profile-card__name {
-  font-size: 19px;
+  font-size: 23px;
   color: #10332d;
   font-weight: 900;
 }
@@ -122,6 +122,10 @@
   width: 100%;
 }
 
+.hero-profile-details--citizen {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .hero-profile-details__item {
   min-width: 0;
   padding: 10px 12px;
@@ -132,7 +136,7 @@
 .hero-profile-details__label {
   display: block;
   color: #6f7f73;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -141,8 +145,9 @@
   margin-top: 3px;
   overflow-wrap: anywhere;
   color: #21494d;
-  font-size: 11px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .my-page .profile-card__stats {
@@ -259,7 +264,7 @@
   }
 
   .my-page .profile-card__name {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   .my-page .profile-card__email {
@@ -272,8 +277,12 @@
     padding: 8px 7px;
   }
 
+  .hero-profile-details__label {
+    font-size: 11px;
+  }
+
   .hero-profile-details__value {
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .my-page .profile-card__stats {
