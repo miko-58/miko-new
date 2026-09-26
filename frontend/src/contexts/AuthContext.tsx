@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined
     let cancelled = false
 
-    void authPersistenceReady.then(() => getRedirectResult(auth)).then(() => {
+    void authPersistenceReady.then(() => {
       if (cancelled) return
 
       unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -37,8 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
         }
       })
+
+      void getRedirectResult(auth).catch((error) => {
+        console.error('Failed to process Google authentication redirect', error)
+      })
     }).catch((error) => {
-      console.error('Failed to initialize Google authentication', error)
+      console.error('Failed to initialize authentication persistence', error)
       if (!cancelled) setLoading(false)
     })
 

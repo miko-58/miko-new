@@ -135,7 +135,9 @@ export default function MyPage() {
   return (
     <div className="screen screen--narrow my-page">
       <header className="page-header">
+        <p className="my-page__eyebrow">NEARU MEMBER CARD</p>
         <h1>マイページ</h1>
+        <p className="my-page__header-note">あなたの助け合いの記録</p>
       </header>
 
       <div className="screen__scroll my-page__content">
