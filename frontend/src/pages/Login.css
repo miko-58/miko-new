@@ -134,7 +134,7 @@
   display: grid;
   place-items: center;
   padding: 0;
-  background: #20262b;
+  background: #f3f7f5;
 }
 
 .role-screen {
@@ -146,37 +146,36 @@
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: #f7f3e4;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(18px);
   color: #132523;
 }
 
 .role-screen__art {
+  position: relative;
   min-height: 250px;
-  flex: 1;
-  background: url('/images/first-screen-art.png') center 28% / cover no-repeat;
+  flex: 0 0 min(60vh, 66.666vw);
+  background: url('/images/first-screen-art.png') center / cover no-repeat;
   border-bottom: 3px solid #1d2c2a;
+  box-shadow: 0 16px 28px rgba(45, 66, 60, .16);
+}
+
+.role-screen__art-logo {
+  position: absolute;
+  top: clamp(12px, 3vw, 30px);
+  left: 50%;
+  width: clamp(128px, 18vw, 220px);
+  height: auto;
+  transform: translateX(-50%);
+  border: 8px solid rgba(255, 255, 255, .9);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 25px rgba(43, 61, 55, .18);
 }
 
 .role-screen__heading {
-  padding: 18px 24px 8px;
+  padding: clamp(16px, 2.5vw, 26px) 24px 8px;
   text-align: center;
-}
-
-.role-screen__brand-mark {
-  width: 86px;
-  height: 68px;
-  margin: -42px auto 2px;
-  overflow: hidden;
-  border: 8px solid #f7f3e4;
-  border-radius: 50%;
-  background: #f7f3e4;
-}
-
-.role-screen__logo {
-  display: block;
-  width: 100%;
-  max-width: none;
-  height: auto;
 }
 
 .role-screen__heading p {
@@ -286,7 +285,6 @@
   .role-screen__art { min-height: 220px; flex: 0 0 40vh; background-position: center 24%; }
   .role-screen__choices { grid-template-columns: 1fr; gap: 10px; padding-inline: 16px; }
   .role-screen__heading { padding-inline: 16px; }
-  .role-screen__brand-mark { margin-top: -34px; }
   .role-screen__note { margin-inline: 16px; }
   .profile-setup { padding: 56px 22px 28px; }
 }
