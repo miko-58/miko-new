@@ -162,13 +162,13 @@
 
 .role-screen__art-logo {
   position: absolute;
-  top: clamp(12px, 3vw, 30px);
+  top: clamp(10px, 2vw, 20px);
   left: 50%;
-  width: clamp(128px, 18vw, 220px);
+  width: clamp(96px, 12vw, 150px);
   height: auto;
   transform: translateX(-50%);
-  border: 8px solid rgba(255, 255, 255, .9);
-  border-radius: 24px;
+  border: 5px solid rgba(255, 255, 255, .9);
+  border-radius: 18px;
   background: #fff;
   box-shadow: 0 12px 25px rgba(43, 61, 55, .18);
 }
