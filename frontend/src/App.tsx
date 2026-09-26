@@ -36,7 +36,8 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/map" element={<MapView />} />
           <Route path="/messages" element={<Messages />} />
-          <Route path="/help/:id/chat" element={<Chat />} />
+          <Route path="/chat/:id" element={<Chat />} />
+          <Route path="/help/:id/chat" element={<Navigate to="/messages" replace />} />
           <Route path="/help/:id/resolve" element={<Resolve />} />
           <Route path="/mypage" element={<MyPage />} />
         </Route>

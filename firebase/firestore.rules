@@ -2,6 +2,96 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function chatFree(uid) {
+      return !exists(/databases/$(database)/documents/activeChats/$(uid))
+        || get(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == null;
+    }
+    function chatHeldAfter(uid, id) {
+      return getAfter(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == id;
+    }
+    function chatReleasedAfter(uid) {
+      return getAfter(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == null;
+    }
+
+    match /activeChats/{uid} {
+      allow get: if request.auth != null;
+      function starting() {
+        let id = request.resource.data.chatId;
+        let room = getAfter(/databases/$(database)/documents/directChats/$(id)).data;
+        return id is string && room.status == 'active'
+          && uid in room.members && request.auth.uid in room.members
+          && (!exists(/databases/$(database)/documents/directChats/$(id))
+            || get(/databases/$(database)/documents/directChats/$(id)).data.status == 'closed');
+      }
+      function ending() {
+        let id = resource.data.chatId;
+        let room = getAfter(/databases/$(database)/documents/directChats/$(id)).data;
+        return id is string && request.resource.data.chatId == null
+          && room.status == 'closed' && request.auth.uid in room.members && uid in room.members;
+      }
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['chatId']) && starting();
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['chatId'])
+        && ((resource.data.chatId == null && starting()) || ending());
+    }
+
+    match /directChats/{chatId} {
+      function participant() {
+        return request.auth != null && request.auth.uid in resource.data.members;
+      }
+      function validRoom() {
+        let data = request.resource.data;
+        return data.keys().hasOnly(['members', 'names', 'status', 'createdAt', 'updatedAt'])
+          && data.members is list && data.members.size() == 2
+          && data.members[0] is string && data.members[1] is string
+          && data.members[0] < data.members[1]
+          && chatId == string(data.members[0].size()) + ':' + data.members[0]
+            + string(data.members[1].size()) + ':' + data.members[1]
+          && request.auth.uid in data.members
+          && data.names is map && data.names.keys().hasOnly(data.members)
+          && data.names[data.members[0]] is string && data.names[data.members[0]].size() <= 100
+          && data.names[data.members[1]] is string && data.names[data.members[1]].size() <= 100
+          && data.updatedAt == request.time;
+      }
+      function starting() {
+        let members = request.resource.data.members;
+        return request.resource.data.status == 'active'
+          && exists(/databases/$(database)/documents/userProfiles/$(members[0]))
+          && exists(/databases/$(database)/documents/userProfiles/$(members[1]))
+          && chatFree(members[0]) && chatFree(members[1])
+          && chatHeldAfter(members[0], chatId) && chatHeldAfter(members[1], chatId);
+      }
+      // 初回開始のトランザクションは未作成の部屋も確認する。
+      allow get: if request.auth != null
+        && (!exists(/databases/$(database)/documents/directChats/$(chatId)) || participant());
+      allow list: if participant();
+      allow create: if request.auth != null && validRoom() && starting()
+        && request.resource.data.createdAt == request.time;
+      allow update: if participant() && validRoom()
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.createdAt == resource.data.createdAt
+        && ((resource.data.status == 'closed' && starting())
+          || (resource.data.status == 'active' && request.resource.data.status == 'closed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+            && chatReleasedAfter(resource.data.members[0]) && chatReleasedAfter(resource.data.members[1])));
+
+      match /messages/{messageId} {
+        function room() {
+          return get(/databases/$(database)/documents/directChats/$(chatId)).data;
+        }
+        allow read: if request.auth != null && request.auth.uid in room().members;
+        allow create: if request.auth != null && request.auth.uid in room().members
+          && room().status == 'active'
+          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+          && request.resource.data.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && request.resource.data.createdAt == request.time;
+      }
+    }
+
     function lockFree(uid) {
       return !exists(/databases/$(database)/documents/activeHelps/$(uid))
         || get(/databases/$(database)/documents/activeHelps/$(uid)).data.helpId == null;
