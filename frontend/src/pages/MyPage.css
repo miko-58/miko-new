@@ -78,7 +78,8 @@
 }
 
 .my-page .profile-card {
-  margin: 0;
+  width: min(calc(100% - 8px), 572px);
+  margin: 0 auto;
   position: relative;
   z-index: 1;
   isolation: isolate;
@@ -100,7 +101,7 @@
   bottom: -13px;
   left: 12px;
   border-radius: 24px;
-  background: #e6f0e6;
+  background: #f4eee0;
   box-shadow: 0 8px 18px #17352d18;
 }
 
@@ -258,6 +259,7 @@
   }
 
   .my-page .profile-card {
+    width: calc(100% - 8px);
     padding: 22px 10px 18px;
     gap: 18px;
     border-radius: 22px;
