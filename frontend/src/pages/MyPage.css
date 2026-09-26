@@ -207,10 +207,14 @@
     padding: 18px 16px 16px;
   }
 
+  .my-page__content {
+    justify-content: center;
+  }
+
   .my-page .profile-card {
     width: 100%;
-    padding: 20px 10px 16px;
-    gap: 16px;
+    padding: 16px 8px 14px;
+    gap: 12px;
     border-radius: 16px;
   }
 
@@ -219,13 +223,13 @@
   }
 
   .my-page .profile-card__avatar {
-    width: 64px;
-    height: 64px;
-    font-size: 24px;
+    width: 56px;
+    height: 56px;
+    font-size: 21px;
   }
 
   .my-page .profile-card__name {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .my-page .profile-card__email {
@@ -242,8 +246,8 @@
     position: relative;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 8px 6px;
+    gap: 5px;
+    padding: 7px 5px;
     border-width: 2px;
     border-radius: 15px;
   }
@@ -263,7 +267,7 @@
   }
 
   .my-page .profile-card__value {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .my-page__stat-chevron {
