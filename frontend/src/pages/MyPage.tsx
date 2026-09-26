@@ -72,6 +72,15 @@ export default function MyPage() {
 
   const displayName = profile?.profileName || user.displayName || '名前未設定'
   const ratingLabel = stats.ratingCount > 0 ? (stats.ratingSum / stats.ratingCount).toFixed(1) : '—'
+  const statItems = [
+    ...(profile?.role !== 'citizen'
+      ? [{ kind: 'helped' as const, label: '助けた', value: stats.helpedCount, unit: '件' }]
+      : []),
+    ...(profile?.role !== 'hero'
+      ? [{ kind: 'received' as const, label: '助けられた', value: stats.helpedByCount, unit: '件' }]
+      : []),
+    { kind: 'rating' as const, label: '評価', value: ratingLabel, unit: '' },
+  ]
 
   return (
     <div className="screen screen--narrow my-page">
@@ -122,12 +131,8 @@ export default function MyPage() {
               )}
             </div>
           )}
-          <div className="profile-card__stats">
-            {([
-              { kind: 'helped', label: '助けた', value: stats.helpedCount, unit: '件' },
-              { kind: 'received', label: '助けられた', value: stats.helpedByCount, unit: '件' },
-              { kind: 'rating', label: '評価', value: ratingLabel, unit: '' },
-            ] as const).map(({ kind, label, value, unit }) => (
+          <div className={`profile-card__stats profile-card__stats--${statItems.length}`}>
+            {statItems.map(({ kind, label, value, unit }) => (
               <div key={kind} className={`my-page__stat my-page__stat--${kind}`}>
                 <span className="my-page__stat-icon">
                   <svg viewBox="0 0 32 32" width="30" height="30" fill="currentColor" aria-hidden="true">
