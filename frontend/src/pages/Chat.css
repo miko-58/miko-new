@@ -99,3 +99,16 @@
   .chat-nav svg { width: 24px; height: 24px; }
   .chat-input-hint { margin-top: 0; }
 }
+.chat-screen .chat-session-action,
+.chat-screen .chat-menu button {
+  border: 2px solid #123c32;
+  border-radius: 12px;
+  padding: 8px 14px;
+  background: #fff9df;
+  color: #123c32;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chat-screen .chat-session-action:disabled,
+.chat-screen .chat-menu button:disabled { opacity: .5; cursor: wait; }

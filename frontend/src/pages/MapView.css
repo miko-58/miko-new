@@ -22,3 +22,17 @@
 .map-page__list-empty { padding: 28px 18px; border-radius: 15px; background: #fffef8; color: #537066; text-align: center; }
 .map-page .bottom-nav { position: absolute; z-index: 1000; right: 0; bottom: 0; left: 0; border-top: 3px solid #073f34; background: #fffef7; }
 @media (min-width: 880px) { .map-page__header { padding: 24px 28px 20px; } .map-page__logo { width: 190px; } .map-page__controls { right: auto; left: 28px; width: 420px; } .map-page__leaflet .leaflet-top { top: 130px; } .map-page__leaflet .leaflet-bottom { bottom: 12px; } .map-page__list { padding-top: 140px; padding-bottom: 24px; } .map-page .bottom-nav { display: none; } }
+.map-page .map-page__chat {
+  margin-top: 8px;
+  padding: 9px 16px;
+  border: 2px solid #123c32;
+  border-radius: 12px;
+  background: #f6cc3b;
+  color: #123c32;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.map-page .map-page__chat:disabled { opacity: .5; cursor: wait; }
+.map-page__hero { padding: 16px; margin-bottom: 12px; border: 2px solid #123c32; border-radius: 18px; background: #fffdf3; }
+.map-page__hero p { margin: 6px 0; }

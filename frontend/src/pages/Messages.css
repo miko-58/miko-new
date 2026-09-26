@@ -17,3 +17,41 @@
 .current-conversation__latest { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 12px; }
 .current-conversation__latest p { min-width: 0; padding: 12px 16px; border-radius: 16px; background: white; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .current-conversation__latest time { margin-left: auto; color: var(--text-secondary); font-size: 12px; }
+
+/* 一覧専用。会話詳細で使用する message-summary の見た目は維持する。 */
+.messages-screen { height: 100dvh; flex: none; background: #fffdf3; color: #07332e; }
+.messages-screen .messages-header { position: relative; flex-shrink: 0; padding: 44px 44px 28px; text-align: center; }
+.messages-screen .messages-header h1 { font-size: clamp(26px, 5vw, 38px); font-weight: 900; letter-spacing: .03em; }
+.messages-screen .messages-header p { margin-top: 6px; font-size: 14px; color: #173d35; font-weight: 700; }
+.messages-back { position: absolute; left: 18px; top: 49px; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: #07332e; cursor: pointer; }
+.messages-decoration { position: absolute; right: 22px; top: 26px; color: #09966a; font-size: 35px; }
+.messages-search { display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin: 0 22px 18px; padding: 13px 16px; border: 3px solid #07332e; border-radius: 20px; background: #fffef8; box-shadow: 0 3px 0 #07332e; }
+.messages-search svg { width: 25px; height: 25px; flex-shrink: 0; }
+.messages-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #07332e; font: inherit; font-weight: 700; }
+.messages-search:focus-within { outline: 3px solid #e5ba26; outline-offset: 3px; }
+.messages-screen .messages-screen__scroll { padding: 8px 22px 24px; }
+.messages-card { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 112px; padding: 16px; border: 3px solid #07332e; border-radius: 23px; background: #fffef8; color: #07332e; box-shadow: 0 4px 0 #07332e; text-align: left; cursor: pointer; font: inherit; }
+.messages-card:hover, .messages-card:focus-visible { background: #ffdc57; }
+.messages-card:focus-visible { outline: 3px solid #09966a; outline-offset: 5px; }
+.messages-card__avatar { width: 62px; height: 70px; flex: 0 0 auto; display: grid; place-items: center; color: #147950; background: #e7f1de; border-radius: 19px; overflow: hidden; }
+.messages-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.messages-card__avatar svg { width: 58px; height: 58px; }
+.messages-card__heading { display: flex; align-items: baseline; gap: 8px; }
+.messages-card__heading h2 { flex: 1; min-width: 0; font-size: 19px; font-weight: 900; overflow-wrap: anywhere; }
+.messages-card__heading time { flex-shrink: 0; font-size: 12px; color: #646a66; }
+.messages-card__post { margin-top: 3px; font-size: 11px; color: #63766c; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.messages-card__latest p { margin-top: 6px; font-size: 14px; color: #454f48; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.messages-card__arrow { font-size: 32px; font-weight: 900; }
+.messages-screen .bottom-nav { display: flex; flex-shrink: 0; margin: 0 18px calc(12px + env(safe-area-inset-bottom, 0px)); padding: 0; overflow: hidden; border: 3px solid #07332e; border-radius: 34px; background: #fffef8; box-shadow: 0 3px 0 #07332e; }
+.messages-screen .bottom-nav__item { padding: 12px 3px; border-radius: 26px; color: #07332e; font-weight: 800; }
+.messages-screen .bottom-nav__item.is-active { background: #ffd33d; box-shadow: inset 0 0 0 2px #07332e; }
+@media (max-width: 360px) {
+  .messages-screen .messages-header { padding-right: 35px; padding-left: 35px; }
+  .messages-decoration { right: 10px; font-size: 24px; }
+  .messages-search { margin-right: 14px; margin-left: 14px; }
+  .messages-screen .messages-screen__scroll { padding-right: 14px; padding-left: 14px; }
+  .messages-card { gap: 9px; padding: 12px; }
+  .messages-card__avatar { width: 44px; height: 56px; }
+  .messages-card__avatar svg { width: 42px; }
+  .messages-card__heading h2 { font-size: 16px; }
+}

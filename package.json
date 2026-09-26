@@ -13,7 +13,8 @@
     "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
     "typecheck": "npm run build --workspace=frontend && npm run typecheck --workspace=backend",
     "start": "npm run start --workspace=backend",
-    "test:participation": "firebase emulators:exec --only firestore --project demo-nearu-participation --config firebase.test.json \"node --test --test-concurrency=1 tests/helpParticipation.test.mjs\""
+    "test:participation": "firebase emulators:exec --only firestore --project demo-nearu-participation --config firebase.test.json \"node --test --test-concurrency=1 tests/helpParticipation.test.mjs\"",
+    "test:chat": "firebase emulators:exec --only firestore --project demo-nearu-participation --config firebase.test.json \"node --test --test-concurrency=1 tests/directChat.test.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",

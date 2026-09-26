@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { DirectChatError, startDirectChat } from '../lib/directChat'
 import BottomNav from '../components/BottomNav'
 import nearuLogo from '../assets/nearu-logo.png'
 import { db } from '../lib/firebase'
@@ -8,7 +11,6 @@ import 'leaflet/dist/leaflet.css'
 import './MapView.css'
 
 type Position = { latitude: number; longitude: number; accuracy: number }
-type HelpPin = { id: string; title: string; latitude: number; longitude: number }
 type HeroPin = {
   id: string
   name: string
@@ -37,14 +39,36 @@ function MapViewport({ position }: { position: Position | null }) {
 }
 
 export default function MapView() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [position, setPosition] = useState<Position | null>(null)
   const [locating, setLocating] = useState(true)
   const [locationError, setLocationError] = useState('')
   const [view, setView] = useState<'map' | 'list'>('map')
-  const [helpPins, setHelpPins] = useState<HelpPin[]>([])
   const [heroPins, setHeroPins] = useState<HeroPin[]>([])
+  const [heroesLoading, setHeroesLoading] = useState(true)
+  const [heroesError, setHeroesError] = useState('')
+  const [chatError, setChatError] = useState('')
+  const [starting, setStarting] = useState(false)
+  const startingRef = useRef(false)
   const active = useRef(true)
   const requestPending = useRef(false)
+
+  async function openChat(partnerUid: string) {
+    if (!user || startingRef.current) return
+    startingRef.current = true
+    setStarting(true)
+    setChatError('')
+    try {
+      const id = await startDirectChat(db, user.uid, partnerUid)
+      navigate(`/chat/${encodeURIComponent(id)}`)
+    } catch (error) {
+      setChatError(error instanceof DirectChatError ? error.message : 'チャットを開始できませんでした。時間をおいてもう一度お試しください。')
+    } finally {
+      startingRef.current = false
+      setStarting(false)
+    }
+  }
 
   const locate = useCallback(() => {
     if (requestPending.current) return
@@ -84,26 +108,10 @@ export default function MapView() {
   }, [locate])
 
   useEffect(() => {
-    const helpsQuery = query(collection(db, 'helpPosts'), where('status', '==', 'open'))
-    return onSnapshot(helpsQuery, (snapshot) => {
-      setHelpPins(snapshot.docs.flatMap((help) => {
-        const data = help.data()
-        const coordinates = data.approximateCoordinates
-        if (!coordinates || typeof coordinates.latitude !== 'number' || typeof coordinates.longitude !== 'number') return []
-        return [{
-          id: help.id,
-          title: typeof data.title === 'string' ? data.title : '助けを求めています',
-          latitude: coordinates.latitude,
-          longitude: coordinates.longitude,
-        }]
-      }))
-    }, () => setHelpPins([]))
-  }, [])
-
-  useEffect(() => {
     const heroesQuery = query(collection(db, 'userProfiles'), where('role', '==', 'hero'))
     return onSnapshot(heroesQuery, (snapshot) => {
       setHeroPins(snapshot.docs.flatMap((hero) => {
+        if (hero.id === user?.uid) return []
         const data = hero.data()
         const location = data.heroLocation
         if (
@@ -124,8 +132,14 @@ export default function MapView() {
           longitude: location.longitude,
         }]
       }))
-    }, () => setHeroPins([]))
-  }, [])
+      setHeroesLoading(false)
+      setHeroesError('')
+    }, () => {
+      setHeroPins([])
+      setHeroesLoading(false)
+      setHeroesError('ヒーローを読み込めませんでした。時間をおいて開き直してください。')
+    })
+  }, [user?.uid])
 
   const coordinates: [number, number] | null = position ? [position.latitude, position.longitude] : null
 
@@ -143,12 +157,19 @@ export default function MapView() {
           </button>
         </div>
       </header>
-      {locationError && <p className="map-page__error" role="alert">{locationError}</p>}
+      {(locationError || heroesError || chatError) && <div className="map-page__error" role="alert">
+        {locationError && <p>{locationError}</p>}
+        {heroesError && <p>{heroesError}</p>}
+        {chatError && <p>{chatError} <button type="button" onClick={() => navigate('/messages')}>メッセージ一覧へ</button></p>}
+      </div>}
       <section className="map-page__canvas" aria-label="周辺の地図">
         {view === 'list' ? (
           <div className="map-page__list" role="tabpanel">
-            <p className="map-page__list-title">近くで助けを待っている人</p>
-            {helpPins.length ? helpPins.map((help) => <button key={help.id} type="button" className="map-page__list-item" onClick={() => setView('map')}><span>☺</span>{help.title}<b>›</b></button>) : <p className="map-page__list-empty">今は近くのHelpはありません。</p>}
+            <p className="map-page__list-title">地図上のヒーロー</p>
+            {heroesLoading ? <p className="map-page__list-empty">読み込み中…</p> : heroPins.length ? heroPins.map(hero => <div key={hero.id} className="map-page__hero">
+              <strong>{hero.name}</strong><p>{hero.skills.length ? hero.skills.join('、') : 'ヒーローとして活動中'}</p>
+              <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>チャットする</button>
+            </div>) : !heroesError && <p className="map-page__list-empty">現在、地図上に表示できるヒーローはいません。</p>}
           </div>
         ) : (
         <MapContainer className="map-page__leaflet" center={coordinates ?? DEFAULT_CENTER} zoom={coordinates ? 16 : 14} scrollWheelZoom zoomControl={false}> 
@@ -158,11 +179,6 @@ export default function MapView() {
             maxZoom={19}
           />
           <MapViewport position={position} />
-          {helpPins.map((help) => (
-            <CircleMarker key={help.id} center={[help.latitude, help.longitude]} radius={18} pathOptions={{ color: '#073f34', weight: 4, fillColor: '#0a9566', fillOpacity: 1 }}>
-              <Popup>{help.title}</Popup>
-            </CircleMarker>
-          ))}
           {heroPins.map((hero) => (
             <CircleMarker
               key={hero.id}
@@ -174,6 +190,8 @@ export default function MapView() {
                 <strong>{hero.name}</strong>
                 <br />
                 {hero.skills.length ? `得意なこと：${hero.skills.join('、')}` : 'ヒーローとして活動中'}
+                <br />
+                <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>{starting ? '接続中…' : 'チャットする'}</button>
               </Popup>
             </CircleMarker>
           ))}
