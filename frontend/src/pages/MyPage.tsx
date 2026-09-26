@@ -11,6 +11,12 @@ import {
 } from '../components/icons'
 import './MyPage.css'
 
+type HeroProfile = {
+  role: 'hero' | 'citizen'
+  skills: string[]
+  reward: string
+}
+
 const menuItems = [
   { label: '設定', Icon: SettingsIcon },
 ]
@@ -19,6 +25,7 @@ export default function MyPage() {
   const { user, loading } = useAuth()
   const [failedPhotoURL, setFailedPhotoURL] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats>(emptyUserStats)
+  const [profile, setProfile] = useState<HeroProfile | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
 
@@ -38,13 +45,21 @@ export default function MyPage() {
   useEffect(() => {
     if (!user) {
       setStats(emptyUserStats)
+      setProfile(null)
       return
     }
 
     return onSnapshot(doc(db, 'userProfiles', user.uid), (snapshot) => {
-      setStats(readUserStats(snapshot.data()))
+      const data = snapshot.data()
+      setStats(readUserStats(data))
+      setProfile({
+        role: data?.role === 'hero' ? 'hero' : 'citizen',
+        skills: Array.isArray(data?.skills) ? data.skills.filter((skill): skill is string => typeof skill === 'string') : [],
+        reward: typeof data?.reward === 'string' ? data.reward : '',
+      })
     }, () => {
       setStats(emptyUserStats)
+      setProfile(null)
     })
   }, [user])
 
@@ -77,6 +92,20 @@ export default function MyPage() {
               <p className="profile-card__email">{user.email || 'メールアドレス未設定'}</p>
             </div>
           </div>
+          {profile?.role === 'hero' && (
+            <div className="hero-profile-details">
+              <div className="hero-profile-details__item">
+                <span className="hero-profile-details__label">得意なこと</span>
+                <span className="hero-profile-details__value">
+                  {profile.skills.length > 0 ? profile.skills.join('・') : '登録なし'}
+                </span>
+              </div>
+              <div className="hero-profile-details__item">
+                <span className="hero-profile-details__label">報酬</span>
+                <span className="hero-profile-details__value">{profile.reward || '相談して決める'}</span>
+              </div>
+            </div>
+          )}
           <div className="profile-card__stats">
             {([
               { kind: 'helped', label: '助けた', value: stats.helpedCount, unit: '件' },

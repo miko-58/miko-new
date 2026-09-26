@@ -115,6 +115,36 @@
 
 .my-page .profile-card__email { color: #5c716a; }
 
+.hero-profile-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.hero-profile-details__item {
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffaf0cc;
+}
+
+.hero-profile-details__label {
+  display: block;
+  color: #6f7f73;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hero-profile-details__value {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: #21494d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .my-page .profile-card__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -236,6 +266,14 @@
     max-width: 100%;
     font-size: 11px;
     overflow-wrap: anywhere;
+  }
+
+  .hero-profile-details__item {
+    padding: 8px 7px;
+  }
+
+  .hero-profile-details__value {
+    font-size: 10px;
   }
 
   .my-page .profile-card__stats {
