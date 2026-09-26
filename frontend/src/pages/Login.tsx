@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
-  getRedirectResult,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
@@ -45,8 +44,8 @@ function readSavedOnboarding(): SavedOnboarding | null {
 }
 
 function isMobileBrowser() {
-  return window.matchMedia?.('(pointer: coarse)').matches
-    || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
 }
 
 function loginErrorMessage(error: unknown) {
@@ -74,12 +73,6 @@ export default function Login() {
   const [reward, setReward] = useState(() => savedOnboarding?.reward ?? '')
   const [customReward, setCustomReward] = useState('')
   const [profileError, setProfileError] = useState('')
-
-  useEffect(() => {
-    void authPersistenceReady.then(() => getRedirectResult(auth)).catch((loginError) => {
-      setProfileError(loginErrorMessage(loginError))
-    })
-  }, [])
 
   async function handleLogin() {
     setPending(true)

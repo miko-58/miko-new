@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { onAuthStateChanged, type User } from 'firebase/auth'
+import { getRedirectResult, onAuthStateChanged, type User } from 'firebase/auth'
 import { auth, authPersistenceReady } from '../lib/firebase'
 import { ensureUserProfile } from '../lib/userProfile'
 
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined
     let cancelled = false
 
-    void authPersistenceReady.then(() => {
+    void authPersistenceReady.then(() => getRedirectResult(auth)).then(() => {
       if (cancelled) return
 
       unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
     }).catch((error) => {
-      console.error('Failed to initialize auth persistence', error)
+      console.error('Failed to initialize Google authentication', error)
       if (!cancelled) setLoading(false)
     })
 
