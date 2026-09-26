@@ -93,7 +93,9 @@ export default function Login() {
         <section className="role-screen" aria-labelledby="role-title">
           <div className="role-screen__art" aria-hidden="true" />
           <div className="role-screen__heading">
-            <img className="role-screen__logo" src={nearuLogo} alt="Nearu" />
+            <div className="role-screen__brand-mark" aria-hidden="true">
+              <img className="role-screen__logo" src={nearuLogo} alt="" />
+            </div>
             <p id="role-title">はじめに、どちらとして使いますか？</p>
           </div>
           <div className="role-screen__choices">
