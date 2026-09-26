@@ -160,6 +160,10 @@
   text-align: left;
 }
 
+.my-page .profile-card__stats--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .my-page__stat {
   display: flex;
   align-items: center;
