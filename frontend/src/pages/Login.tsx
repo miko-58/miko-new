@@ -6,11 +6,14 @@ import {
   signInWithRedirect,
 } from 'firebase/auth'
 import { auth, authPersistenceReady } from '../lib/firebase'
-import nearuLogo from '../assets/nearu-logo.png'
+import { BackIcon, ImageIcon, UserIcon } from '../components/icons'
 import './Login.css'
 
 type Role = 'hero' | 'citizen'
-type LoginStep = 'role' | 'profile' | 'auth'
+type LoginStep = 'role' | 'profile'
+
+const heroSkills = ['買い物サポート', '荷物を運ぶ', 'スマホ・PCサポート', '話し相手', '道案内', 'その他（自由入力）']
+const rewardOptions = ['無償・気持ちで', 'お礼のお菓子', 'コーヒー1杯', '相談して決める', 'その他（自由入力）']
 
 function isMobileBrowser() {
   return window.matchMedia?.('(pointer: coarse)').matches
@@ -31,21 +34,26 @@ function loginErrorMessage(error: unknown) {
 
 export default function Login() {
   const [pending, setPending] = useState(false)
-  const [error, setError] = useState('')
   const [step, setStep] = useState<LoginStep>('role')
   const [role, setRole] = useState<Role | null>(null)
-  const [displayName, setDisplayName] = useState('')
-  const [skills, setSkills] = useState<string[]>([])
+  const [name, setName] = useState('')
+  const [photoUrl, setPhotoUrl] = useState('')
+  const [skill, setSkill] = useState('')
+  const [customSkill, setCustomSkill] = useState('')
+  const [gender, setGender] = useState('')
+  const [reward, setReward] = useState('')
+  const [customReward, setCustomReward] = useState('')
+  const [profileError, setProfileError] = useState('')
 
   useEffect(() => {
     void authPersistenceReady.then(() => getRedirectResult(auth)).catch((loginError) => {
-      setError(loginErrorMessage(loginError))
+      setProfileError(loginErrorMessage(loginError))
     })
   }, [])
 
   async function handleLogin() {
     setPending(true)
-    setError('')
+    setProfileError('')
 
     try {
       await authPersistenceReady
@@ -59,7 +67,7 @@ export default function Login() {
 
       await signInWithPopup(auth, provider)
     } catch (loginError) {
-      setError(loginErrorMessage(loginError))
+      setProfileError(loginErrorMessage(loginError))
     } finally {
       setPending(false)
     }
@@ -67,139 +75,162 @@ export default function Login() {
 
   function chooseRole(nextRole: Role) {
     setRole(nextRole)
+    setProfileError('')
     setStep('profile')
   }
 
-  function toggleSkill(skill: string) {
-    setSkills((current) => current.includes(skill)
-      ? current.filter((item) => item !== skill)
-      : [...current, skill])
+  function selectPhoto(file: File | undefined) {
+    if (!file) return
+    const reader = new FileReader()
+    reader.addEventListener('load', () => setPhotoUrl(String(reader.result)))
+    reader.readAsDataURL(file)
   }
 
-  function continueToAuth() {
-    if (!role || !displayName.trim()) return
+  async function continueFromProfile() {
+    const heroNeedsCustomSkill = role === 'hero' && skill === 'その他（自由入力）' && !customSkill.trim()
+    const heroNeedsCustomReward = role === 'hero' && reward === 'その他（自由入力）' && !customReward.trim()
+
+    if (!role || !name.trim() || !gender || (role === 'hero' && (!skill || !reward || heroNeedsCustomSkill || heroNeedsCustomReward))) {
+      setProfileError('名前・得意なこと・性別・ほしいもの（ヒーローの場合）を設定してください。')
+      return
+    }
 
     sessionStorage.setItem('nearu-onboarding', JSON.stringify({
       role,
-      displayName: displayName.trim(),
-      skills,
+      name: name.trim(),
+      skills: role === 'hero' ? [skill === 'その他（自由入力）' ? customSkill.trim() : skill] : [],
+      gender,
+      reward: role === 'hero' ? (reward === 'その他（自由入力）' ? customReward.trim() : reward) : '',
     }))
-    setStep('auth')
+    await handleLogin()
   }
 
   if (step === 'role') {
     return (
       <main className="role-stage">
         <section className="role-screen" aria-labelledby="role-title">
-          <div className="role-screen__art" aria-hidden="true" />
-          <div className="role-screen__heading">
-            <p id="role-title">はじめに、どちらとして使いますか？</p>
-          </div>
-          <div className="role-screen__choices">
-            <button type="button" className="role-choice role-choice--hero" onClick={() => chooseRole('hero')}>
-              <span className="role-choice__mark" aria-hidden="true">♥</span>
-              <span>
-                <strong>ヒーローとしてはじめる</strong>
-                <small>困っている人を助けたい</small>
-              </span>
-              <span className="role-choice__arrow" aria-hidden="true">▶</span>
-            </button>
-            <button type="button" className="role-choice role-choice--citizen" onClick={() => chooseRole('citizen')}>
-              <span className="role-choice__mark" aria-hidden="true">●</span>
-              <span>
-                <strong>助けてほしい人としてはじめる</strong>
-                <small>困ったときに助けてほしい</small>
-              </span>
-              <span className="role-choice__arrow" aria-hidden="true">▶</span>
-            </button>
-          </div>
-          <p className="role-screen__note">役割はあとからいつでも変更できます</p>
-        </section>
-      </main>
-    )
-  }
-
-  if (step === 'profile') {
-    const selectedRoleLabel = role === 'hero' ? 'ヒーロー' : '助けてほしい人'
-    return (
-      <main className="profile-stage">
-        <section className="profile-setup" aria-labelledby="profile-title">
-          <button type="button" className="profile-setup__back" onClick={() => setStep('role')} aria-label="役割選択に戻る">←</button>
-          <p className="profile-setup__eyebrow">{selectedRoleLabel}として登録</p>
-          <h1 id="profile-title">プロフィールを設定</h1>
-          <p className="profile-setup__lead">まずは、呼ばれたい名前と得意なことを教えてください。</p>
-
-          <label className="profile-setup__label" htmlFor="display-name">表示名</label>
-          <input
-            id="display-name"
-            className="profile-setup__input"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder="例：えいと"
-            autoComplete="nickname"
-          />
-
-          <p className="profile-setup__label">得意なこと（複数選択）</p>
-          <div className="profile-setup__skills">
-            {['荷物運び', '道案内', '移動サポート', '話を聞く'].map((skill) => (
+          <h1 id="role-title" className="sr-only">はじめに、どちらとして使いますか？</h1>
+          <div className="role-screen__art">
+            <div className="role-screen__art-frame">
               <button
-                key={skill}
                 type="button"
-                className={`profile-skill${skills.includes(skill) ? ' is-selected' : ''}`}
-                onClick={() => toggleSkill(skill)}
-              >
-                {skill}
+                className="role-screen__art-choice role-screen__art-choice--hero"
+                onClick={() => chooseRole('hero')}
+                aria-label="ヒーローとしてはじめる。困っている人を助けたい"
+              />
+              <button
+                type="button"
+                className="role-screen__art-choice role-screen__art-choice--citizen"
+                onClick={() => chooseRole('citizen')}
+                aria-label="助けてほしい人としてはじめる。困ったときに助けてほしい"
+              />
+            </div>
+            <div className="role-screen__mobile-choices">
+              <button type="button" className="role-screen__mobile-choice role-screen__mobile-choice--hero" onClick={() => chooseRole('hero')}>
+                <span className="role-screen__mobile-choice-icon" aria-hidden="true">▶</span>
+                <span><strong>ヒーローとしてはじめる</strong><small>困っている人を助けたい</small></span>
+                <span aria-hidden="true">›</span>
               </button>
-            ))}
+              <button type="button" className="role-screen__mobile-choice role-screen__mobile-choice--citizen" onClick={() => chooseRole('citizen')}>
+                <span className="role-screen__mobile-choice-icon" aria-hidden="true">▶</span>
+                <span><strong>助けてほしい人としてはじめる</strong><small>困ったときに助けてほしい</small></span>
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
           </div>
-
-          <p className="profile-setup__privacy">正確な現在地や個人情報は、必要な相手以外には公開されません。</p>
-          <button type="button" className="profile-setup__continue" onClick={continueToAuth} disabled={!displayName.trim()}>
-            Googleで登録を続ける →
-          </button>
         </section>
       </main>
     )
   }
 
-  return (
-    <main className="welcome-stage">
-    <section className="welcome" aria-labelledby="welcome-title">
-      <div className="welcome__photo" aria-hidden="true" />
-      <div className="welcome__island" aria-hidden="true" />
-      <div className="splash__content">
-        <img
-          className="splash__logo-image"
-          id="welcome-title"
-          src={nearuLogo}
-          alt="Nearu"
-        />
-        <p className="splash__tagline">
-          <span>やさしい社会を、いっしょに。</span>
-        </p>
-      </div>
-        <div className="splash__actions" aria-busy={pending}>
-          <button
-            type="button"
-            className="welcome__button welcome__button--primary"
-            onClick={handleLogin}
-            disabled={pending}
-          >
-            はじめる
+  if (step === 'profile' && role) {
+    const isHero = role === 'hero'
+    const roleLabel = isHero ? 'ヒーロー' : '市民'
+    const roleIcon = isHero ? '🗡️' : '🌼'
+
+    return (
+      <main className={`profile-stage profile-stage--${role}`}>
+        <section className={`profile-setup profile-setup--${role}`} aria-labelledby="profile-title">
+          <button type="button" className="profile-setup__back" onClick={() => setStep('role')} aria-label="役割選択に戻る">
+            <BackIcon />
           </button>
-          <button
-            type="button"
-            className="welcome__button welcome__button--secondary"
-            onClick={handleLogin}
-            disabled={pending}
-          >
-            ログイン
-          </button>
-          <p className="welcome__note" role="status">{pending ? 'Googleに接続しています…' : 'Googleアカウントでご利用いただけます'}</p>
-          {error && <p className="welcome__error" role="alert">{error}</p>}
-        </div>
-      <div className="welcome__home-indicator" aria-hidden="true" />
-    </section>
-    </main>
-  )
+          <div className="profile-setup__banner" aria-hidden="true">
+            <b>{isHero ? 'NEARU HELPER GUILD' : 'NEARU CITIZEN GUILD'}</b>
+            <span>{isHero ? 'HERO QUEST' : 'CITIZEN QUEST'}</span>
+            <i>⚑</i>
+          </div>
+          <div className="profile-setup__intro">
+            <div className="profile-setup__avatar">
+              {photoUrl ? <img src={photoUrl} alt="選択したプロフィール写真" /> : <span aria-hidden="true">{roleIcon}</span>}
+            </div>
+            <div>
+              <p className="profile-setup__eyebrow">{roleLabel}のプロフィール</p>
+              <h1 id="profile-title">冒険の準備をしよう！</h1>
+              <p>{isHero ? 'あなたの得意なことで、近くの誰かを助けよう。' : '安心して助けを求められるプロフィールを作ろう。'}</p>
+            </div>
+          </div>
+
+          <form className="profile-form" onSubmit={(event) => { event.preventDefault(); void continueFromProfile() }}>
+            <label className="profile-photo-picker">
+              <input type="file" accept="image/*" onChange={(event) => selectPhoto(event.target.files?.[0])} />
+              <span className="profile-photo-picker__icon"><ImageIcon /></span>
+              <span><strong>プロフィール写真</strong><small>{photoUrl ? '写真を変更する' : 'タップして写真を選ぶ'}</small></span>
+              <span className="profile-photo-picker__action">選ぶ</span>
+            </label>
+
+            <label className="profile-field">
+              <span className="profile-field__label"><UserIcon /> 名前</span>
+              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="例：れもん" autoComplete="nickname" />
+            </label>
+
+            {isHero && (
+              <fieldset className="profile-fieldset">
+                <legend>🗡️ 得意なこと</legend>
+                <label className="profile-select">
+                  <select value={skill} onChange={(event) => setSkill(event.target.value)}>
+                    <option value="">得意なことを選んでください</option>
+                    {heroSkills.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </label>
+                {skill === 'その他（自由入力）' && (
+                  <input className="profile-free-input" value={customSkill} onChange={(event) => setCustomSkill(event.target.value)} placeholder="得意なことを自由に書いてください" />
+                )}
+              </fieldset>
+            )}
+
+            <fieldset className="profile-fieldset">
+              <legend>🌟 性別</legend>
+              <div className="profile-option-grid profile-option-grid--three">
+                {['女性', '男性', '回答しない'].map((option) => (
+                  <button key={option} type="button" className={`profile-choice${gender === option ? ' is-selected' : ''}`} onClick={() => setGender(option)}>{option}</button>
+                ))}
+              </div>
+            </fieldset>
+
+            {isHero && (
+              <fieldset className="profile-fieldset">
+                <legend>🪙 ほしいもの <small>（報酬）</small></legend>
+                <label className="profile-select">
+                  <select value={reward} onChange={(event) => setReward(event.target.value)}>
+                    <option value="">ほしいものを選んでください</option>
+                    {rewardOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </label>
+                {reward === 'その他（自由入力）' && (
+                  <input className="profile-free-input" value={customReward} onChange={(event) => setCustomReward(event.target.value)} placeholder="ほしいものを自由に書いてください" />
+                )}
+              </fieldset>
+            )}
+
+            {profileError && <p className="profile-form__error" role="alert">{profileError}</p>}
+            <button className="profile-form__submit" type="submit" disabled={pending}>
+              {pending ? 'Google認証を開始しています…' : <>このプロフィールで登録する <span aria-hidden="true">→</span></>}
+            </button>
+          </form>
+        </section>
+      </main>
+    )
+  }
+
+  return null
 }
