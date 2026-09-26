@@ -16,6 +16,7 @@ type HeroProfile = {
   profileName: string
   skills: string[]
   reward: string
+  gender: string
 }
 
 const menuItems = [
@@ -58,6 +59,7 @@ export default function MyPage() {
         profileName: typeof data?.profileName === 'string' ? data.profileName : '',
         skills: Array.isArray(data?.skills) ? data.skills.filter((skill): skill is string => typeof skill === 'string') : [],
         reward: typeof data?.reward === 'string' ? data.reward : '',
+        gender: typeof data?.gender === 'string' ? data.gender : '',
       })
     }, () => {
       setStats(emptyUserStats)
@@ -104,6 +106,10 @@ export default function MyPage() {
               <div className="hero-profile-details__item">
                 <span className="hero-profile-details__label">報酬</span>
                 <span className="hero-profile-details__value">{profile.reward || '相談して決める'}</span>
+              </div>
+              <div className="hero-profile-details__item">
+                <span className="hero-profile-details__label">性別</span>
+                <span className="hero-profile-details__value">{profile.gender || '未登録'}</span>
               </div>
             </div>
           )}

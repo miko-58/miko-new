@@ -117,7 +117,7 @@
 
 .hero-profile-details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   width: 100%;
 }
@@ -141,7 +141,7 @@
   margin-top: 3px;
   overflow-wrap: anywhere;
   color: #21494d;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -273,7 +273,7 @@
   }
 
   .hero-profile-details__value {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .my-page .profile-card__stats {
