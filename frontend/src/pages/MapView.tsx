@@ -15,6 +15,8 @@ type HeroPin = {
   id: string
   name: string
   skills: string[]
+  gender: string
+  reward: string
   latitude: number
   longitude: number
 }
@@ -128,6 +130,8 @@ export default function MapView() {
           skills: Array.isArray(data.skills)
             ? data.skills.filter((skill): skill is string => typeof skill === 'string')
             : [],
+          gender: typeof data.gender === 'string' ? data.gender : '',
+          reward: typeof data.reward === 'string' ? data.reward : '',
           latitude: location.latitude,
           longitude: location.longitude,
         }]
@@ -147,28 +151,41 @@ export default function MapView() {
     <div className="screen map-page">
       <header className="map-page__header">
         <img className="map-page__logo" src={nearuLogo} alt="Nearu" />
-        <div className="map-page__controls">
+        <div className={`map-page__controls${view === 'list' ? ' map-page__controls--list' : ''}`}>
           <div className="map-page__switch" role="tablist" aria-label="表示方法">
             <button type="button" role="tab" aria-selected={view === 'map'} className={view === 'map' ? 'is-active' : ''} onClick={() => setView('map')}>地図</button>
             <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'is-active' : ''} onClick={() => setView('list')}>リスト</button>
           </div>
-          <button type="button" className="map-page__locate" aria-label="現在地へ移動" onClick={locate} disabled={locating}>
-            <span aria-hidden="true">➤</span>
-          </button>
+          {view === 'map' && <button type="button" className="map-page__locate" aria-label="現在地へ移動" onClick={locate} disabled={locating}>
+              <span aria-hidden="true">➤</span>
+            </button>}
         </div>
+        {(locationError || heroesError || chatError) && <div className="map-page__error" role="alert">
+          {locationError && <p>{locationError}</p>}
+          {heroesError && <p>{heroesError}</p>}
+          {chatError && <p>{chatError} <button type="button" onClick={() => navigate('/messages')}>メッセージ一覧へ</button></p>}
+        </div>}
       </header>
-      {(locationError || heroesError || chatError) && <div className="map-page__error" role="alert">
-        {locationError && <p>{locationError}</p>}
-        {heroesError && <p>{heroesError}</p>}
-        {chatError && <p>{chatError} <button type="button" onClick={() => navigate('/messages')}>メッセージ一覧へ</button></p>}
-      </div>}
       <section className="map-page__canvas" aria-label="周辺の地図">
         {view === 'list' ? (
           <div className="map-page__list" role="tabpanel">
             <p className="map-page__list-title">地図上のヒーロー</p>
             {heroesLoading ? <p className="map-page__list-empty">読み込み中…</p> : heroPins.length ? heroPins.map(hero => <div key={hero.id} className="map-page__hero">
-              <strong>{hero.name}</strong><p>{hero.skills.length ? hero.skills.join('、') : 'ヒーローとして活動中'}</p>
-              <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>チャットする</button>
+              <div className="map-page__hero-main">
+                <div className="map-page__hero-name">
+                  <span>ヒーロープロフィール</span>
+                  <strong>{hero.name}さん</strong>
+                </div>
+                <dl className="map-page__hero-details">
+                  {hero.gender && <><dt>性別</dt><dd>{hero.gender}</dd></>}
+                  {hero.reward && <><dt>報酬</dt><dd>{hero.reward}</dd></>}
+                </dl>
+              </div>
+              <div className="map-page__hero-skills">
+                <span>できること</span>
+                <p>{hero.skills.length > 0 ? hero.skills.join('・') : 'ヒーローとして活動中'}</p>
+              </div>
+              <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>このヒーローにチャットする</button>
             </div>) : !heroesError && <p className="map-page__list-empty">現在、地図上に表示できるヒーローはいません。</p>}
           </div>
         ) : (
