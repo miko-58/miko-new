@@ -453,3 +453,51 @@
     padding-right: 12px;
   }
 }
+
+.hero-my-page {
+  width: 100%;
+  max-width: none;
+  background: #fffdf3;
+  color: #092f2c;
+}
+.hero-my-page__content { padding: 20px var(--gutter) calc(108px + env(safe-area-inset-bottom, 0px)); }
+.hero-my-page .bottom-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 20; box-shadow: 0 -4px 20px #163d2f12; }
+.hero-my-page__topbar { display: flex; align-items: center; justify-content: space-between; width: min(100%, 980px); margin: 0 auto 18px; }
+.hero-my-page__topbar h1 { margin: 0; color: #092f2c; font-size: clamp(26px, 5vw, 38px); font-weight: 900; }
+.hero-my-page__settings { position: relative; }
+.hero-my-page__settings summary { display: grid; place-items: center; width: 46px; height: 46px; list-style: none; border: 3px solid #0a473a; border-radius: 13px; background: #fffdf3; color: #0a473a; cursor: pointer; }
+.hero-my-page__settings summary::-webkit-details-marker { display: none; }
+.hero-my-page__settings summary svg { width: 25px; height: 25px; }
+.hero-my-page__settings > div { position: absolute; z-index: 2; top: 54px; right: 0; width: 178px; padding: 9px; border: 2px solid #0a473a; border-radius: 13px; background: #fffdf3; box-shadow: 0 8px 18px #17352d22; }
+.hero-my-page__settings button { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: transparent; color: #9d251c; font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+.hero-my-page__settings button:disabled { opacity: .6; cursor: wait; }
+.hero-my-page__settings p { margin: 5px 2px 0; color: #9d251c; font-size: 11px; overflow-wrap: anywhere; }
+.hero-my-page__profile { width: min(100%, 980px); margin: 0 auto; overflow: hidden; border: 3px solid #0a473a; border-radius: 22px; background: #fffdf3; box-shadow: 0 9px 20px #17352d19; }
+.hero-my-page__banner { display: block; width: 100%; height: clamp(150px, 25vw, 285px); object-fit: cover; }
+.hero-my-page__identity { position: relative; padding: 0 24px 28px; text-align: center; }
+.hero-my-page__avatar { position: relative; width: clamp(118px, 20vw, 190px); height: clamp(118px, 20vw, 190px); display: grid; place-items: center; overflow: visible; margin: clamp(-60px, -10vw, -95px) auto 12px; border: 5px solid #092f2c; border-radius: 50%; background: #e0f0d8; color: #0a473a; font-size: 52px; font-weight: 900; box-shadow: 0 0 0 7px #fffdf3; }
+.hero-my-page__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hero-my-page__edit { position: absolute; right: -8px; bottom: -8px; display: grid; place-items: center; width: 43px; height: 43px; border: 3px solid #0a473a; border-radius: 50%; background: #f6cc3b; color: #092f2c; font-size: 25px; font-weight: 900; cursor: pointer; }
+.hero-my-page__identity h1 { margin: 0; color: #092f2c; font-size: clamp(31px, 6vw, 50px); font-weight: 900; line-height: 1.2; }
+.hero-my-page__role { margin: 5px 0; font-size: 19px; font-weight: 900; }
+.hero-my-page__meta { color: #72777a; font-size: 13px; font-weight: 700; }
+.hero-my-page__facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 0 22px 22px; }
+.hero-my-page__fact { display: flex; align-items: center; min-width: 0; gap: 12px; padding: 18px; border: 2px solid #092f2c; border-radius: 17px; background: #fffef8; }
+.hero-my-page__fact-icon { display: grid; flex: 0 0 auto; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #f6cc3b; color: #092f2c; font-size: 30px; font-weight: 900; }
+.hero-my-page__fact--reward .hero-my-page__fact-icon { background: #dcefd7; }
+.hero-my-page__fact--skill .hero-my-page__fact-icon { background: #e7f0cf; }
+.hero-my-page__fact--gender .hero-my-page__fact-icon { background: #e5f3e8; }
+.hero-my-page__fact p { margin: 0 0 3px; font-size: 13px; font-weight: 800; }
+.hero-my-page__fact strong { display: inline; overflow-wrap: anywhere; font-size: clamp(18px, 3vw, 27px); font-weight: 900; line-height: 1.2; }
+.hero-my-page__fact small { margin-left: 4px; color: #707779; font-size: 12px; font-weight: 700; }
+.hero-my-page__activity { width: min(100%, 980px); margin: 22px auto 0; }
+.hero-my-page__activity h2 { margin: 0 0 12px; color: #092f2c; font-size: clamp(24px, 4vw, 32px); font-weight: 900; }
+.hero-my-page__activity-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.hero-my-page__activity-card { display: flex; align-items: center; justify-content: center; gap: 17px; min-height: 126px; padding: 18px; border: 3px solid #092f2c; border-radius: 20px; background: #e6f5e5; }
+.hero-my-page__activity-card--rated { background: #ffe36c; }
+.hero-my-page__activity-card > span { font-size: 43px; line-height: 1; }
+.hero-my-page__activity-card strong { display: block; color: #092f2c; font-size: clamp(38px, 7vw, 58px); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.hero-my-page__activity-card p { margin: 6px 0 0; color: #092f2c; font-size: 16px; font-weight: 900; }
+.hero-my-page :is(button, a):focus-visible { outline: 3px solid #00a990; outline-offset: 3px; }
+@media (max-width: 680px) { .hero-my-page__content { padding: 13px 14px calc(96px + env(safe-area-inset-bottom, 0px)); } .hero-my-page__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 14px 14px; gap: 9px; } .hero-my-page__fact { gap: 9px; padding: 12px; } .hero-my-page__fact-icon { width: 37px; height: 37px; font-size: 22px; } .hero-my-page__activity-card { min-height: 104px; gap: 10px; padding: 12px; border-width: 2px; border-radius: 16px; } .hero-my-page__activity-card > span { font-size: 31px; } .hero-my-page__activity-card p { font-size: 13px; } }
+@media (min-width: 880px) { .hero-my-page .bottom-nav { display: flex; left: 232px; padding-right: max(16px, calc((100vw - 1272px) / 2)); padding-left: max(16px, calc((100vw - 1272px) / 2)); } }

@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { DirectChatError, startDirectChat } from '../lib/directChat'
 import BottomNav from '../components/BottomNav'
-import nearuLogo from '../assets/nearu-logo.png'
 import { db } from '../lib/firebase'
 import 'leaflet/dist/leaflet.css'
 import './MapView.css'
@@ -150,15 +149,14 @@ export default function MapView() {
   return (
     <div className="screen map-page">
       <header className="map-page__header">
-        <img className="map-page__logo" src={nearuLogo} alt="Nearu" />
         <div className={`map-page__controls${view === 'list' ? ' map-page__controls--list' : ''}`}>
           <div className="map-page__switch" role="tablist" aria-label="表示方法">
             <button type="button" role="tab" aria-selected={view === 'map'} className={view === 'map' ? 'is-active' : ''} onClick={() => setView('map')}>地図</button>
             <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'is-active' : ''} onClick={() => setView('list')}>リスト</button>
           </div>
-          {view === 'map' && <button type="button" className="map-page__locate" aria-label="現在地へ移動" onClick={locate} disabled={locating}>
+          {/* {view === 'map' && <button type="button" className="map-page__locate" aria-label="現在地へ移動" onClick={locate} disabled={locating}>
               <span aria-hidden="true">➤</span>
-            </button>}
+            </button>} */}
         </div>
         {(locationError || heroesError || chatError) && <div className="map-page__error" role="alert">
           {locationError && <p>{locationError}</p>}
@@ -189,6 +187,7 @@ export default function MapView() {
             </div>) : !heroesError && <p className="map-page__list-empty">現在、地図上に表示できるヒーローはいません。</p>}
           </div>
         ) : (
+          <>
         <MapContainer className="map-page__leaflet" center={coordinates ?? DEFAULT_CENTER} zoom={coordinates ? 16 : 14} scrollWheelZoom zoomControl={false}> 
           <TileLayer
             attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
@@ -219,8 +218,20 @@ export default function MapView() {
             </CircleMarker>
           </>}
         </MapContainer>
-        )}
-      </section>
+
+        <button
+        type="button"
+        className="map-page__locate"
+        aria-label="現在地へ移動"
+        onClick={locate}
+        disabled={locating}
+      >
+        <span aria-hidden="true">➤</span>
+      </button>
+        </>
+        )} 
+        
+      </section> 
       <BottomNav />
     </div>
   )

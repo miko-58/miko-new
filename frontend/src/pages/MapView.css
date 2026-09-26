@@ -7,6 +7,12 @@
 .map-page__switch button { min-height: 43px; border: 0; background: transparent; color: #073f34; font-size: 16px; font-weight: 800; cursor: pointer; }
 .map-page__switch button.is-active { background: #13895f; color: #fff; }
 .map-page__locate { width: 52px; height: 52px; display: grid; flex: 0 0 auto; place-items: center; border: 3px solid #073f34; border-radius: 15px; background: #fffef7; color: #073f34; cursor: pointer; box-shadow: 0 3px 8px rgb(5 39 32 / 12%); }
+.map-page__canvas .map-page__locate {
+  position: absolute;
+  z-index: 500;
+  right: 16px;
+  bottom: 16px;
+}
 .map-page__locate span { display: block; transform: rotate(-45deg); font-size: 27px; line-height: 1; }
 .map-page__locate:disabled { opacity: .55; cursor: wait; }
 .map-page__canvas { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #e5e7df; }
@@ -21,7 +27,7 @@
 .map-page__list-item span { width: 32px; height: 32px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #159868; color: #fff; font-size: 20px; }
 .map-page__list-item b { margin-left: auto; font-size: 24px; }
 .map-page__list-empty { padding: 28px 18px; border-radius: 15px; background: #fffef8; color: #537066; text-align: center; }
-.map-page .bottom-nav { position: relative; z-index: 1; border-top: 3px solid #073f34; background: #fffef7; }
+.map-page .bottom-nav { position: relative; z-index: 1; }
 @media (min-width: 880px) { .map-page__header { padding: 24px 28px 20px; } .map-page__logo { width: 190px; } .map-page__controls { width: 420px; } .map-page .bottom-nav { display: none; } }
 .map-page .map-page__chat {
   margin-top: 8px;

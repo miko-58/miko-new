@@ -1,5 +1,4 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
 import MapView from './pages/MapView'
 import Messages from './pages/Messages'
 import Chat from './pages/Chat'
@@ -11,7 +10,6 @@ import Login from './pages/Login'
 function AppLayout() {
   return (
     <div className="app-shell">
-      <Sidebar />
       <div className="app-shell__main">
         <Outlet />
       </div>
