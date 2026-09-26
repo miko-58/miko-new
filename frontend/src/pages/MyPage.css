@@ -48,7 +48,7 @@
 
 .my-page__content {
   padding: 28px var(--gutter) calc(108px + env(safe-area-inset-bottom, 0px));
-  background: #fffdf54d;
+  background: transparent;
 }
 
 /* スマホでは常に画面下にナビを出し、ブラウザの「戻る」に頼らず移動できるようにする。 */
