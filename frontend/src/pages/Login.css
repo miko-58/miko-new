@@ -1,0 +1,139 @@
+.welcome-stage {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background: #f0f6f3;
+}
+
+.welcome {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  max-width: 100%;
+  min-height: 780px;
+  overflow: hidden;
+  border: 7px solid #30383e;
+  border-radius: 52px;
+  background: var(--accent-soft);
+  box-shadow: 0 24px 64px #294e4520, 0 0 0 2px #bac3ca;
+  color: var(--accent-pressed);
+}
+
+.welcome__photo {
+  position: absolute;
+  z-index: -2;
+  inset: -4px;
+  background: url('/images/help5-riverside.png') center / cover;
+  filter: blur(1.2px);
+}
+
+.welcome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #f4fbf755 0%, #f4fbf79c 22%, #f4fbf766 42%, #ffffff05 58%, #ffffffb8 76%, #fffffff5 100%);
+}
+
+.welcome__island {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 106px;
+  height: 29px;
+  border-radius: 24px;
+  background: #20282d;
+}
+
+.welcome .splash__content {
+  flex: none;
+  padding: 113px 16px 0;
+}
+
+.welcome .splash__logo-image {
+  display: block;
+  width: min(100%, 240px);
+  height: auto;
+  margin: -28px auto -30px;
+}
+
+.welcome .splash__tagline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  color: var(--accent-pressed);
+  font-size: clamp(14px, 4.2vw, 18px);
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: .035em;
+  text-align: center;
+  text-shadow: 0 1px 12px #ffffffb3;
+}
+
+.welcome .splash__tagline > span {
+  white-space: nowrap;
+  text-indent: .035em;
+  font: inherit;
+  color: inherit;
+}
+
+.welcome .splash__actions {
+  width: calc(100% - 48px);
+  max-width: 330px;
+  margin: auto auto 0;
+  padding: 170px 0 46px;
+  gap: 12px;
+}
+
+.welcome__button {
+  width: 100%;
+  min-height: 55px;
+  padding: 14px 20px;
+  border: 1.5px solid var(--accent);
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: background-color .15s, transform .15s;
+}
+
+.welcome__button--primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px #0f766e1a; }
+.welcome__button--secondary { background: #fffffff5; color: var(--accent); }
+.welcome__button--primary:hover:not(:disabled) { background: var(--accent-pressed); }
+.welcome__button--secondary:hover:not(:disabled) { background: var(--accent-soft); }
+.welcome__button:active:not(:disabled) { transform: translateY(1px); }
+.welcome__button:focus-visible { outline: 3px solid var(--accent-pressed); outline-offset: 4px; }
+.welcome__button:disabled { opacity: .6; cursor: wait; }
+.welcome__note { margin-top: 2px; color: #526e63; font-size: 11px; text-align: center; }
+.welcome__error { color: #9d3030; background: #fff; padding: 10px; border-radius: 10px; font-size: 13px; }
+
+.welcome__home-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 4px;
+  border-radius: 4px;
+  background: #293d47;
+}
+
+@media (max-width: 480px) {
+  .welcome-stage { padding: 0; background: var(--accent-soft); }
+  .welcome { width: 100%; min-height: 100vh; min-height: 100svh; border: 0; border-radius: 0; box-shadow: none; }
+  .welcome__island, .welcome__home-indicator { display: none; }
+  .welcome .splash__content { padding-top: max(88px, calc(36px + env(safe-area-inset-top, 0px))); }
+  .welcome .splash__actions { padding-top: 130px; padding-bottom: max(32px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome__button { transition: none; }
+}

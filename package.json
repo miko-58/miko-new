@@ -1,0 +1,28 @@
+{
+  "name": "inclusive-map",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "typecheck": "npm run build --workspace=frontend && npm run typecheck --workspace=backend",
+    "start": "npm run start --workspace=backend",
+    "test:participation": "firebase emulators:exec --only firestore --project demo-nearu-participation --config firebase.test.json \"node --test --test-concurrency=1 tests/helpParticipation.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "concurrently": "^9.2.1",
+    "firebase-admin": "^14.5.0",
+    "firebase-tools": "^15.31.0"
+  },
+  "engines": {
+    "node": ">=24.13.0 <25",
+    "npm": ">=11.6.2 <12"
+  }
+}

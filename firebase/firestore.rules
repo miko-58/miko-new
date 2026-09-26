@@ -1,0 +1,163 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function lockFree(uid) {
+      return !exists(/databases/$(database)/documents/activeHelps/$(uid))
+        || get(/databases/$(database)/documents/activeHelps/$(uid)).data.helpId == null;
+    }
+    function holdsAfter(uid, postId) {
+      return getAfter(/databases/$(database)/documents/activeHelps/$(uid)).data.helpId == postId;
+    }
+    function releasedAfter(uid, postId) {
+      return !existsAfter(/databases/$(database)/documents/activeHelps/$(uid))
+        || getAfter(/databases/$(database)/documents/activeHelps/$(uid)).data.helpId != postId;
+    }
+
+    // 管理者による既存案件の移行が済むまで、新規引受は停止する。
+    function participationReady() {
+      return exists(/databases/$(database)/documents/appConfig/helpParticipation)
+        && get(/databases/$(database)/documents/appConfig/helpParticipation).data.enabled == true;
+    }
+
+    match /activeHelps/{uid} {
+      // 個別の占有確認のみ許可。プロフィールや会話はここに保存しない。
+      allow get: if request.auth != null;
+      function claiming() {
+        let id = request.resource.data.helpId;
+        let before = get(/databases/$(database)/documents/helpPosts/$(id)).data;
+        let after = getAfter(/databases/$(database)/documents/helpPosts/$(id)).data;
+        return id is string && before.status == 'open' && after.status == 'matched'
+          && after.acceptedHelperUid == request.auth.uid
+          && (uid == after.authorUid || uid == after.acceptedHelperUid);
+      }
+      function releasing() {
+        let id = resource.data.helpId;
+        let post = getAfter(/databases/$(database)/documents/helpPosts/$(id)).data;
+        return id is string && request.resource.data.helpId == null && post.status == 'closed'
+          && (request.auth.uid == post.authorUid || request.auth.uid == post.acceptedHelperUid);
+      }
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['helpId']) && claiming();
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['helpId'])
+        && (request.resource.data == resource.data
+          || (resource.data.helpId == null && claiming()) || releasing());
+      // 占有情報の削除や、進行中のままの解除・付け替えは禁止。
+    }
+
+    match /helpPosts/{postId} {
+      // 投稿一覧はログイン済みユーザーだけが読める。
+      allow read: if request.auth != null;
+
+      // 投稿者の UID は、必ず Firebase Authentication の本人と一致させる。
+      allow create: if request.auth != null
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.acceptedHelperUid == null
+        && request.resource.data.keys().hasOnly([
+          'title', 'description', 'category', 'type', 'locationHint',
+          'requesterFeature', 'status', 'acceptedHelperUid', 'authorUid',
+          'authorName', 'authorPhotoUrl', 'imageUrl', 'imageUrls', 'createdAt', 'updatedAt'
+        ]);
+
+      // 完了は双方が実行できる。進行中案件の削除・再オープンは禁止。
+      allow update: if request.auth != null
+        && (resource.data.authorUid == request.auth.uid
+          || resource.data.acceptedHelperUid == request.auth.uid)
+        && resource.data.status in ['open', 'matched', 'closed']
+        && request.resource.data.status == 'closed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && releasedAfter(resource.data.authorUid, postId)
+        && (resource.data.acceptedHelperUid == null || releasedAfter(resource.data.acceptedHelperUid, postId));
+      allow delete: if request.auth != null && resource.data.authorUid == request.auth.uid
+        && resource.data.status == 'open' && resource.data.acceptedHelperUid == null;
+
+      // 募集中の投稿は、投稿者以外のログイン済みユーザーが1人だけ引き受けられる。
+      allow update: if request.auth != null
+        && participationReady()
+        && lockFree(request.auth.uid) && lockFree(resource.data.authorUid)
+        && holdsAfter(request.auth.uid, postId) && holdsAfter(resource.data.authorUid, postId)
+        && resource.data.authorUid != request.auth.uid
+        && resource.data.status == 'open'
+        && resource.data.acceptedHelperUid == null
+        && request.resource.data.status == 'matched'
+        && request.resource.data.acceptedHelperUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'acceptedHelperUid', 'acceptedHelperName', 'acceptedAt'])
+        && request.resource.data.acceptedHelperName is string
+        && request.resource.data.acceptedHelperName.size() > 0
+        && request.resource.data.acceptedHelperName.size() <= 100;
+
+      // 投稿に担当者が決まると、その2人だけが会話を利用できる。
+      match /messages/{messageId} {
+        function isParticipant() {
+          let post = get(/databases/$(database)/documents/helpPosts/$(postId)).data;
+          return request.auth != null
+            && post.acceptedHelperUid is string
+            && (post.authorUid == request.auth.uid
+              || post.acceptedHelperUid == request.auth.uid);
+        }
+
+        allow read: if isParticipant();
+        allow create: if isParticipant()
+          && get(/databases/$(database)/documents/helpPosts/$(postId)).data.status == 'matched'
+          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000
+          && request.resource.data.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && request.resource.data.createdAt == request.time;
+        // 送信済みメッセージの編集・削除は許可しない。
+      }
+
+      // 場所ドキュメントはログイン済みユーザーが担当者決定前から読める。
+      // それ以外の private ドキュメントは従来どおり当事者に限定する。
+      match /private/{privateDocument} {
+        allow read: if request.auth != null
+          && exists(/databases/$(database)/documents/helpPosts/$(postId))
+          && (privateDocument == 'location'
+            || get(/databases/$(database)/documents/helpPosts/$(postId)).data.authorUid == request.auth.uid
+            || get(/databases/$(database)/documents/helpPosts/$(postId)).data.acceptedHelperUid == request.auth.uid);
+
+        // 投稿を作るときに、投稿者が同時に場所情報を保存する。
+        allow create: if request.auth != null
+          && getAfter(/databases/$(database)/documents/helpPosts/$(postId)).data.authorUid == request.auth.uid;
+
+        allow update, delete: if request.auth != null
+          && get(/databases/$(database)/documents/helpPosts/$(postId)).data.authorUid == request.auth.uid;
+      }
+    }
+
+    match /userProfiles/{userId} {
+      // マイページの回数・評価は本人だけが読める。
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      function initialHelperCount() {
+        let data = request.resource.data;
+        return data.helpedCount == 0 || (data.helpedCount == 1
+          && data.completedHelpIds.size() == 1
+          && getAfter(/databases/$(database)/documents/helpPosts/$(data.completedHelpIds[0])).data.status == 'closed'
+          && getAfter(/databases/$(database)/documents/helpPosts/$(data.completedHelpIds[0])).data.acceptedHelperUid == userId);
+      }
+      function initialAuthorCount() {
+        let data = request.resource.data;
+        return data.helpedByCount == 0 || (data.helpedByCount == 1
+          && data.closedPostIds.size() == 1
+          && getAfter(/databases/$(database)/documents/helpPosts/$(data.closedPostIds[0])).data.status == 'closed'
+          && getAfter(/databases/$(database)/documents/helpPosts/$(data.closedPostIds[0])).data.authorUid == userId);
+      }
+      // 初回認証では0。プロフィール未作成での完了は実案件を検証する。
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && initialHelperCount()
+        && initialAuthorCount()
+        && request.resource.data.ratingSum == 0
+        && request.resource.data.ratingCount == 0;
+
+      // 回数の更新は、ログイン中の本人に限る。
+      allow update: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

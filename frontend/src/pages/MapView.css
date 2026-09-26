@@ -1,0 +1,118 @@
+.map-page {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  flex: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.map-page__header {
+  position: absolute;
+  z-index: 2;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  pointer-events: none;
+}
+
+.map-page__header h1 {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  box-shadow: 0 2px 12px #0002;
+  font-size: 18px;
+}
+
+.map-page__locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  box-shadow: 0 2px 12px #0002;
+  pointer-events: auto;
+}
+
+.map-page__canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-muted);
+}
+
+.map-page__leaflet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-muted);
+}
+
+.map-page__leaflet .leaflet-top {
+  top: calc(76px + env(safe-area-inset-top, 0px));
+}
+
+.map-page__leaflet .leaflet-bottom {
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+}
+
+.map-page__info,
+.map-page__error {
+  position: absolute;
+  z-index: 2;
+  left: 16px;
+  right: 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 12px #0002;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.map-page__info {
+  bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.map-page__info p + p {
+  margin-top: 4px;
+}
+
+.map-page__canvas > .map-page__info {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+.map-page__error {
+  top: calc(80px + env(safe-area-inset-top, 0px));
+  left: 60px;
+  color: #b42318;
+}
+
+.map-page .bottom-nav {
+  position: absolute;
+  z-index: 3;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+@media (min-width: 880px) {
+  .map-page__leaflet .leaflet-bottom {
+    bottom: 0;
+  }
+
+  .map-page__info {
+    bottom: 30px;
+  }
+}
