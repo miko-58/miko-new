@@ -40,6 +40,10 @@ type OnboardingProfile = {
   skills: string[]
   gender: string
   reward: string
+  heroLocation?: {
+    latitude: number
+    longitude: number
+  }
 }
 
 function readOnboardingProfile(): OnboardingProfile | null {
@@ -56,9 +60,15 @@ function readOnboardingProfile(): OnboardingProfile | null {
     const gender = typeof data.gender === 'string' ? data.gender : ''
     const reward = typeof data.reward === 'string' ? data.reward : ''
     const skills = Array.isArray(data.skills) ? data.skills.filter((skill): skill is string => typeof skill === 'string') : []
+    const location = typeof data.heroLocation === 'object' && data.heroLocation !== null
+      ? data.heroLocation as Record<string, unknown>
+      : null
+    const heroLocation = typeof location?.latitude === 'number' && typeof location.longitude === 'number'
+      ? { latitude: location.latitude, longitude: location.longitude }
+      : undefined
 
     if (!role || !name || !gender) return null
-    return { role, name, skills, gender, reward }
+    return { role, name, skills, gender, reward, heroLocation }
   } catch {
     return null
   }
@@ -73,6 +83,7 @@ function onboardingFields(profile: OnboardingProfile | null) {
     skills: profile.skills,
     gender: profile.gender,
     reward: profile.reward,
+    ...(profile.role === 'hero' && profile.heroLocation ? { heroLocation: profile.heroLocation } : {}),
   }
 }
 
