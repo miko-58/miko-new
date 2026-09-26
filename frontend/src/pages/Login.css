@@ -155,22 +155,9 @@
   position: relative;
   min-height: 250px;
   flex: 0 0 min(60vh, 66.666vw);
-  background: url('/images/first-screen-art.png') center / cover no-repeat;
+  background: url('/images/first-screen-art.png') center top / cover no-repeat;
   border-bottom: 3px solid #1d2c2a;
   box-shadow: 0 16px 28px rgba(45, 66, 60, .16);
-}
-
-.role-screen__art-logo {
-  position: absolute;
-  top: clamp(10px, 2vw, 20px);
-  left: 50%;
-  width: clamp(96px, 12vw, 150px);
-  height: auto;
-  transform: translateX(-50%);
-  border: 5px solid rgba(255, 255, 255, .9);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 12px 25px rgba(43, 61, 55, .18);
 }
 
 .role-screen__heading {
@@ -282,7 +269,13 @@
 @media (max-width: 640px) {
   .profile-stage { padding: 0; }
   .profile-setup { min-height: 100vh; min-height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
-  .role-screen__art { min-height: 220px; flex: 0 0 40vh; background-position: center 24%; }
+  .role-screen__art {
+    min-height: 0;
+    flex: 0 0 min(56vw, 230px);
+    background-size: 130% auto;
+    background-position: center top;
+    background-color: #fffdf5;
+  }
   .role-screen__choices { grid-template-columns: 1fr; gap: 10px; padding-inline: 16px; }
   .role-screen__heading { padding-inline: 16px; }
   .role-screen__note { margin-inline: 16px; }
