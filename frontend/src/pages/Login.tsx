@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
 } from 'firebase/auth'
 import { auth, authPersistenceReady } from '../lib/firebase'
 import { BackIcon, ImageIcon, UserIcon } from '../components/icons'
@@ -43,11 +42,6 @@ function readSavedOnboarding(): SavedOnboarding | null {
   }
 }
 
-function isMobileBrowser() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
-}
-
 function loginErrorMessage(error: unknown) {
   const code = typeof error === 'object' && error !== null && 'code' in error
     ? String(error.code)
@@ -81,13 +75,6 @@ export default function Login() {
     try {
       await authPersistenceReady
       const provider = new GoogleAuthProvider()
-
-      if (isMobileBrowser()) {
-        // スマホではポップアップが別タブ・白紙画面になりやすいため、画面遷移方式を使う。
-        await signInWithRedirect(auth, provider)
-        return
-      }
-
       await signInWithPopup(auth, provider)
     } catch (loginError) {
       setProfileError(loginErrorMessage(loginError))
