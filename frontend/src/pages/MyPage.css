@@ -1,12 +1,9 @@
+.my-page {
+  background: url('/images/mypage-background.png') center / cover fixed;
+}
+
 .my-page .page-header {
-  display: block;
-  position: relative;
-  overflow: visible;
-  padding: 26px var(--gutter) 22px;
-  border-bottom: 3px solid #10332d;
-  background: linear-gradient(135deg, #147440 0%, #0b8b68 58%, #f1c936 160%);
-  color: #fffdf0;
-  text-align: center;
+  display: none;
 }
 
 .my-page .page-header::after {
@@ -50,9 +47,8 @@
 }
 
 .my-page__content {
-  padding: 18px var(--gutter) calc(92px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(#fffdf580, #fffdf580), url('/images/mypage-background.png') center top / cover;
-  background-attachment: local;
+  padding: 28px var(--gutter) calc(108px + env(safe-area-inset-bottom, 0px));
+  background: #fffdf54d;
 }
 
 /* スマホでは常に画面下にナビを出し、ブラウザの「戻る」に頼らず移動できるようにする。 */
@@ -206,24 +202,6 @@
 @media (max-width: 600px) {
   .my-page .page-header {
     padding: 18px 16px 16px;
-  }
-
-  .my-page .page-header::after {
-    right: 12px;
-    bottom: -24px;
-    font-size: 68px;
-  }
-
-  .my-page .page-header h1 {
-    font-size: 27px;
-  }
-
-  .my-page__eyebrow {
-    font-size: 9px;
-  }
-
-  .my-page__header-note {
-    font-size: 11px;
   }
 
   .my-page .profile-card {
