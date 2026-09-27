@@ -3,7 +3,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { useNavigate, useParams } from 'react-router-dom'
 import { StarIcon } from '../components/icons'
 import { useAuth } from '../contexts/AuthContext'
-import { CitizenResultError, submitCitizenResult } from '../lib/citizenResult'
+import { submitCitizenResult } from '../lib/citizenResult'
 import { endDirectChat } from '../lib/directChat'
 import { db } from '../lib/firebase'
 import { uploadHelpPhoto } from '../lib/photoUpload'
@@ -150,7 +150,7 @@ export default function Resolve() {
       await endDirectChat(db, user.uid, chatId)
       navigate('/messages', { replace: true })
     } catch (cause) {
-      setError(cause instanceof CitizenResultError ? cause.message : '評価の送信に失敗しました。写真の保存先と通信状況を確認して、もう一度お試しください。')
+      setError(cause instanceof Error ? cause.message : '評価の送信に失敗しました。もう一度お試しください。')
     } finally {
       setIsSending(false)
     }
