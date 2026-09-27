@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signOut } from 'firebase/auth'
-import { collection, doc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import { auth, db } from '../lib/firebase'
 import { emptyUserStats, readUserStats, type UserStats } from '../lib/userProfile'
@@ -13,6 +13,7 @@ type HeroProfile = {
   profileName: string
   skills: string[]
   reward: string
+  offeredReward: string
   gender: string
 }
 
@@ -100,6 +101,48 @@ function HeroMyPage({
   </div>
 }
 
+function CitizenRewardEditor({ uid, savedReward }: { uid: string; savedReward: string }) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
+  const value = draft ?? savedReward
+
+  async function save() {
+    if (savingRef.current || value.length > 300) return
+    savingRef.current = true
+    setSaving(true)
+    setError('')
+    setSaved(false)
+    try {
+      const offeredReward = value.trim()
+      await updateDoc(doc(db, 'userProfiles', uid), { offeredReward, updatedAt: serverTimestamp() })
+      setDraft(offeredReward)
+      setSaved(true)
+    } catch {
+      setError('保存できませんでした。入力内容は残っています。もう一度お試しください。')
+    } finally {
+      savingRef.current = false
+      setSaving(false)
+    }
+  }
+
+  return <form className="citizen-my-page__reward" onSubmit={(event) => { event.preventDefault(); void save() }}>
+    <label htmlFor="citizen-offered-reward">渡せる報酬（任意）</label>
+    <p id="citizen-reward-hint">報酬として渡せるものがあれば、ご記入ください。空欄でも大丈夫です（300文字以内）。</p>
+    <textarea id="citizen-offered-reward" rows={3} maxLength={300} value={value} disabled={saving}
+      aria-describedby="citizen-reward-hint" placeholder="例：コーヒー1杯、お菓子など"
+      onChange={(event) => { setDraft(event.target.value); setSaved(false); setError('') }} />
+    <div className="citizen-my-page__reward-actions">
+      <span>{value.length} / 300</span>
+      <button type="submit" disabled={saving || value.trim() === savedReward}>{saving ? '保存中…' : '保存する'}</button>
+    </div>
+    {saved && <p role="status">保存しました。</p>}
+    {error && <p className="citizen-my-page__reward-error" role="alert">{error}</p>}
+  </form>
+}
+
 export default function MyPage() {
   const { user, loading } = useAuth()
   const [failedPhotoURL, setFailedPhotoURL] = useState<string | null>(null)
@@ -137,6 +180,7 @@ export default function MyPage() {
         profileName: typeof data?.profileName === 'string' ? data.profileName : '',
         skills: Array.isArray(data?.skills) ? data.skills.filter((skill): skill is string => typeof skill === 'string') : [],
         reward: typeof data?.reward === 'string' ? data.reward : '',
+        offeredReward: typeof data?.offeredReward === 'string' ? data.offeredReward : '',
         gender: typeof data?.gender === 'string' ? data.gender : '',
       })
     }, () => {
@@ -165,16 +209,6 @@ export default function MyPage() {
     ratingSum: stats.ratingSum + receivedRatings.sum,
     ratingCount: stats.ratingCount + receivedRatings.count,
   }
-  const ratingLabel = displayedStats.ratingCount > 0 ? (displayedStats.ratingSum / displayedStats.ratingCount).toFixed(1) : '—'
-  const statItems = [
-    ...(profile?.role !== 'citizen'
-      ? [{ kind: 'helped' as const, label: '助けた', value: stats.helpedCount, unit: '件' }]
-      : []),
-    ...(profile?.role !== 'hero'
-      ? [{ kind: 'received' as const, label: '助けられた', value: stats.helpedByCount, unit: '件' }]
-      : []),
-    { kind: 'rating' as const, label: '評価', value: ratingLabel, unit: '' },
-  ]
 
   if (profile?.role === 'hero') {
     return <HeroMyPage
@@ -228,20 +262,19 @@ export default function MyPage() {
               <div className="hero-my-page__fact hero-my-page__fact--gender">
                 <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
               </div>
+              <CitizenRewardEditor key={user.uid} uid={user.uid} savedReward={profile.offeredReward} />
             </div>
           )}
         </section>
         <section className="hero-my-page__activity" aria-labelledby="citizen-activity-title">
           <h2 id="citizen-activity-title">あなたの活動</h2>
           <div className="hero-my-page__activity-grid">
-            {statItems.map(({ kind, label, value, unit }) => (
-              <div key={kind} className={`hero-my-page__activity-card${kind === 'rating' ? ' hero-my-page__activity-card--rated' : ''}`}>
+              <div className="hero-my-page__activity-card">
                 <div>
-                  <strong>{value}{unit && <span className="citizen-my-page__stat-unit">{unit}</span>}</strong>
-                  <p>{label}</p>
+                  <strong>{stats.helpedByCount}<span className="citizen-my-page__stat-unit">件</span></strong>
+                  <p>助けられた</p>
                 </div>
               </div>
-            ))}
           </div>
         </section>
       </div>
