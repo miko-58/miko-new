@@ -2,20 +2,14 @@ import { initializeApp } from 'firebase/app'
 import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-function requiredFirebaseSetting(name: string) {
-  const value = import.meta.env[name]
-  if (!value) throw new Error(`Firebase設定 ${name} がありません。.env.local を確認してください。`)
-  return value
-}
-
 const firebaseConfig = {
-  apiKey: requiredFirebaseSetting('VITE_FIREBASE_API_KEY'),
-  authDomain: requiredFirebaseSetting('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: requiredFirebaseSetting('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: requiredFirebaseSetting('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: requiredFirebaseSetting('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: requiredFirebaseSetting('VITE_FIREBASE_APP_ID'),
-  measurementId: requiredFirebaseSetting('VITE_FIREBASE_MEASUREMENT_ID'),
+  apiKey: "AIzaSyAbnf37tVmhbLeNj7I5j8KEw7_ulrd6uj4",
+  authDomain: "help5-d7f86.firebaseapp.com",
+  projectId: "help5-d7f86",
+  storageBucket: "help5-d7f86.firebasestorage.app",
+  messagingSenderId: "199141086604",
+  appId: "1:199141086604:web:ee9282d2b17c4e2c9132a9",
+  measurementId: "G-BWBCJXZZW0"
 }
 
 const app = initializeApp(firebaseConfig)
