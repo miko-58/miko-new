@@ -167,10 +167,12 @@ export default function Resolve() {
       <section className="resolve-camera" aria-labelledby="resolve-camera-title">
         <div className="resolve-camera__heading"><span aria-hidden="true">📷</span><div><h2 id="resolve-camera-title">今日の助け合いを記録</h2><p>外カメ1枚＋内カメ1枚</p></div></div>
         <div className="resolve-camera__previews">
-          <div className="resolve-camera__outer">{outerPhoto ? <img src={outerPhoto.previewUrl} alt="外カメで撮影した写真" /> : <span>外カメ<br />未撮影</span>}</div>
-          <div className="resolve-camera__inner">{innerPhoto ? <img src={innerPhoto.previewUrl} alt="内カメで撮影した写真" /> : <span>内カメ<br />未撮影</span>}</div>
+          {cameraSide ? <div className="resolve-camera__live"><video ref={videoRef} autoPlay playsInline muted /></div> : <>
+            <div className="resolve-camera__outer">{outerPhoto ? <img src={outerPhoto.previewUrl} alt="外カメで撮影した写真" /> : <span>外カメ<br />未撮影</span>}</div>
+            {innerPhoto && <div className="resolve-camera__inner"><img src={innerPhoto.previewUrl} alt="内カメで撮影した写真" /></div>}
+          </>}
         </div>
-        {cameraSide ? <div className="resolve-camera__live"><video ref={videoRef} autoPlay playsInline muted /><div className="resolve-camera__live-actions"><button type="button" onClick={capturePhoto}>● 撮影する</button><button type="button" className="resolve-camera__cancel" onClick={closeCamera}>閉じる</button></div></div> : <div className="resolve-camera__actions"><button type="button" onClick={() => void openCamera('environment')}>{outerPhoto ? '外カメを撮り直す' : '外カメを起動'}</button><button type="button" onClick={() => void openCamera('user')}>{innerPhoto ? '内カメを撮り直す' : '内カメを起動'}</button></div>}
+        {cameraSide ? <div className="resolve-camera__live-actions"><button type="button" onClick={capturePhoto}>● 撮影する</button><button type="button" className="resolve-camera__cancel" onClick={closeCamera}>閉じる</button></div> : <div className="resolve-camera__actions"><button type="button" onClick={() => void openCamera('environment')}>{outerPhoto ? '外カメを撮り直す' : '外カメを起動'}</button><button type="button" onClick={() => void openCamera('user')}>{innerPhoto ? '内カメを撮り直す' : '内カメを起動'}</button></div>}
         {cameraError && <p className="resolve-camera__error" role="alert">{cameraError}</p>}
       </section>
       <section className="resolve-rating" aria-labelledby="resolve-rating-title">
