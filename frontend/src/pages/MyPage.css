@@ -504,7 +504,18 @@
 
 /* 市民のデータ・操作を保ち、ヒーローと同じカード構成を使用する。 */
 .citizen-my-page__facts { grid-template-columns: minmax(0, 1fr); }
+.citizen-my-page .hero-my-page__activity-grid { grid-template-columns: minmax(0, 1fr); }
 .citizen-my-page__stat-unit { margin-left: 5px; font-size: 16px; font-weight: 700; }
 .citizen-my-page .hero-my-page__identity h1 { overflow-wrap: anywhere; }
 .citizen-my-page .hero-my-page__activity-card { min-width: 0; text-align: center; }
 .citizen-my-page .hero-my-page__activity-card strong { overflow-wrap: anywhere; }
+.citizen-my-page__reward { min-width: 0; padding: 18px; border: 2px solid #092f2c; border-radius: 17px; background: #fffef8; }
+.citizen-my-page__reward label { display: block; font-size: 18px; font-weight: 900; }
+.citizen-my-page__reward p { margin: 8px 0; font-size: 13px; }
+.citizen-my-page__reward textarea { display: block; box-sizing: border-box; width: 100%; min-height: 96px; padding: 12px; border: 2px solid #9eafa3; border-radius: 12px; background: #fff; color: #092f2c; font: inherit; resize: vertical; }
+.citizen-my-page__reward textarea:focus-visible { outline: 3px solid #00a990; outline-offset: 3px; }
+.citizen-my-page__reward-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.citizen-my-page__reward-actions span { font-size: 12px; }
+.citizen-my-page__reward button { padding: 10px 20px; border: 2px solid #092f2c; border-radius: 12px; background: #f6cc3b; color: #092f2c; font: inherit; font-weight: 800; cursor: pointer; }
+.citizen-my-page__reward button:disabled { opacity: .55; cursor: default; }
+.citizen-my-page__reward-error { color: #9d251c; }
