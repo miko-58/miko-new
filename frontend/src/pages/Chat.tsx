@@ -99,7 +99,6 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
 
   async function changeConversation() {
     if (!room || !allowed || !canFinish || changePending.current || sendingRef.current) return
-    if (room.status === 'active' && !window.confirm('やり取りを終了しますか？履歴は残り、双方が別の相手とチャットできるようになります。')) return
     changePending.current = true
     setChanging(true)
     setChangeError('')
@@ -112,6 +111,15 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
       changePending.current = false
       setChanging(false)
     }
+  }
+
+  function handleResolutionAction() {
+    if (!room || !canFinish) return
+    if (room.status === 'active') {
+      navigate(`/chat/${encodeURIComponent(room.id)}/resolve`)
+      return
+    }
+    void changeConversation()
   }
 
   async function handleSend() {
@@ -140,7 +148,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
         <details className="chat-menu">
           <summary aria-label="チャットメニュー"><span aria-hidden="true">⋮</span></summary>
           <div><Link to="/messages">メッセージ一覧</Link>
-            {allowed && canFinish && <button type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{room?.status === 'active' ? '依頼を終了' : '依頼を再開'}</button>}
+            {allowed && canFinish && <button type="button" disabled={changing || sending} onClick={handleResolutionAction}>{room?.status === 'active' ? '解決した' : '依頼を再開'}</button>}
           </div>
         </details>
       </div>
@@ -149,7 +157,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
         <div><h1>{partnerName(room, uid)}</h1><p>{room.status === 'active' ? isHero ? '市民からの相談に対応中' : 'ヒーローとやり取り中' : isHero ? '終了した相談' : '終了した依頼'}</p></div>
       </div>}
       <header className="chat-header">
-        {allowed && room && canFinish ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{changing ? '更新中…' : room.status === 'active' ? '依頼を終了' : 'この依頼を再開'}</button> : <h1>{isHero ? '市民からの相談' : 'メッセージ'}</h1>}
+        {allowed && room && canFinish ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={handleResolutionAction}>{changing ? '更新中…' : room.status === 'active' ? '解決した' : 'この依頼を再開'}</button> : <h1>{isHero ? '市民からの相談' : 'メッセージ'}</h1>}
       </header>
       {changeError && <p className="chat-feedback" role="alert">{changeError}</p>}
       <div className="chat-thread" ref={threadRef} role="log" aria-label="会話履歴" aria-live="polite" aria-relevant="additions text" onScroll={() => {
