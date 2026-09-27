@@ -49,6 +49,9 @@ export async function startDirectChat(db: Firestore, uid: string, partnerUid: st
     }
     if (room.data()?.status === 'active') return
     if (profiles.some(profile => !profile.exists())) throw new DirectChatError('プロフィールが見つかりません。')
+    if (profiles.every(profile => profile.data()?.role === 'hero')) {
+      throw new DirectChatError('ヒーロー同士ではチャットできません。市民からの相談を待ちましょう。')
+    }
     const names = Object.fromEntries(members.map((member, index) => [member,
       String(profiles[index].data()?.profileName || '名前未設定').slice(0, 100),
     ]))
