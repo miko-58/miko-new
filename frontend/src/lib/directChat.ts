@@ -33,24 +33,17 @@ export function partnerName(chat: DirectChat, uid: string) {
   return chat.names[chat.members.find(member => member !== uid) ?? ''] || '名前未設定'
 }
 
-/** 同じ2人は同じ部屋を再利用。双方の占有と部屋の開始を同時に保存する。 */
+/** 同じ2人は同じ部屋を再利用。相手ごとの会話は並行して開始できる。 */
 export async function startDirectChat(db: Firestore, uid: string, partnerUid: string) {
   if (!uid || !partnerUid || uid === partnerUid) throw new DirectChatError('自分とはチャットできません。')
   const members = [uid, partnerUid].sort()
   const id = directChatId(uid, partnerUid)
   await runTransaction(db, async transaction => {
     const roomRef = doc(db, 'directChats', id)
-    const lockRefs = [uid, partnerUid].map(member => doc(db, 'activeChats', member))
-    const [room, ownLock, partnerLock, ...profiles] = await Promise.all([
-      transaction.get(roomRef), ...lockRefs.map(ref => transaction.get(ref)),
+    const [room, ...profiles] = await Promise.all([
+      transaction.get(roomRef),
       ...members.map(member => transaction.get(doc(db, 'userProfiles', member))),
     ])
-    if (ownLock.data()?.chatId && ownLock.data()?.chatId !== id) {
-      throw new DirectChatError('現在のやり取りを終了してから、次の相手とチャットしてください。')
-    }
-    if (partnerLock.data()?.chatId && partnerLock.data()?.chatId !== id) {
-      throw new DirectChatError('相手は別の人とやり取り中です。時間をおいてお試しください。')
-    }
     if (room.data()?.status === 'active') return
     if (profiles.some(profile => !profile.exists())) throw new DirectChatError('プロフィールが見つかりません。')
     const participantRoles = Object.fromEntries(members.map((member, index) => [member,
@@ -66,12 +59,11 @@ export async function startDirectChat(db: Firestore, uid: string, partnerUid: st
       requesterUid: uid, participantRoles,
       createdAt: room.data()?.createdAt ?? serverTimestamp(),
     })
-    lockRefs.forEach(ref => transaction.set(ref, { chatId: id }))
   })
   return id
 }
 
-/** どちらからでも終了でき、履歴を残して双方の占有を解除する。 */
+/** 市民の依頼者だけが終了でき、履歴は残す。 */
 export async function endDirectChat(db: Firestore, uid: string, id: string) {
   await runTransaction(db, async transaction => {
     const roomRef = doc(db, 'directChats', id)
@@ -79,12 +71,7 @@ export async function endDirectChat(db: Firestore, uid: string, id: string) {
     const data = room.data()
     if (!data?.members?.includes(uid) || data.requesterUid !== uid) throw new DirectChatError('依頼を終了できるのは、チャットを始めた市民だけです。')
     if (data.status === 'closed') return
-    const refs = (data.members as string[]).map(member => doc(db, 'activeChats', member))
-    const locks = await Promise.all(refs.map(ref => transaction.get(ref)))
     transaction.update(roomRef, { status: 'closed', updatedAt: serverTimestamp() })
-    locks.forEach((lock, index) => {
-      if (lock.data()?.chatId === id) transaction.set(refs[index], { chatId: null })
-    })
   })
 }
 
