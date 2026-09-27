@@ -18,7 +18,9 @@ after(async () => { await env?.cleanup() })
 beforeEach(async () => {
   await env.clearFirestore()
   await env.withSecurityRulesDisabled(async context => {
-    await Promise.all(['a', 'b', 'c', 'd'].map(uid => setDoc(doc(context.firestore(), 'userProfiles', uid), { profileName: uid })))
+    await Promise.all([
+      ['a', 'citizen'], ['b', 'hero'], ['c', 'citizen'], ['d', 'hero'],
+    ].map(([uid, role]) => setDoc(doc(context.firestore(), 'userProfiles', uid), { profileName: uid, role })))
   })
 })
 test('pair identity, participant reads, private messages and member query', async () => {
@@ -45,14 +47,14 @@ test('both people are busy; concurrent attempts allow exactly one partner', asyn
   await assert.rejects(startDirectChat(db('d'), 'd', 'b'))
 })
 test('same user starting two different conversations simultaneously', async () => {
-  const results = await Promise.allSettled([startDirectChat(db('a'), 'a', 'b'), startDirectChat(db('a'), 'a', 'c')])
+  const results = await Promise.allSettled([startDirectChat(db('a'), 'a', 'b'), startDirectChat(db('a'), 'a', 'd')])
   assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
 })
 test('hero pairs cannot start a direct chat', async () => {
   await env.withSecurityRulesDisabled(async context => {
     await Promise.all(['a', 'b'].map(uid => updateDoc(doc(context.firestore(), 'userProfiles', uid), { role: 'hero' })))
   })
-  await assert.rejects(startDirectChat(db('a'), 'a', 'b'), /ヒーロー同士/)
+  await assert.rejects(startDirectChat(db('a'), 'a', 'b'), /市民として/)
 
   const id = directChatId('a', 'b')
   const batch = writeBatch(db('a'))
@@ -80,18 +82,19 @@ test('only a citizen can leave one rating and two result photos for a hero', asy
   await assertFails(setDoc(result, { ...data, rating: 1 }))
   await assertFails(setDoc(doc(db('b'), 'userProfiles', 'b', 'ratings', id), { ...data, citizenUid: 'b' }))
 })
-for (const endingUser of ['a', 'b']) test(`${endingUser} can end, both locks release, history survives reopening`, async () => {
+test('only the citizen requester can end, both locks release, history survives reopening', async () => {
   const id = await startDirectChat(db('a'), 'a', 'b')
   await sendDirectMessage(db('a'), id, 'a', '残す履歴')
-  await endDirectChat(db(endingUser), endingUser, id)
+  await assert.rejects(endDirectChat(db('b'), 'b', id), /始めた市民だけ/)
+  await endDirectChat(db('a'), 'a', id)
   for (const uid of ['a', 'b']) assert.equal((await getDoc(doc(db(uid), 'activeChats', uid))).data().chatId, null)
   await assertFails(sendDirectMessage(db('b'), id, 'b', 'closed'))
-  const next = await startDirectChat(db('b'), 'b', 'c')
+  const next = await startDirectChat(db('c'), 'c', 'd')
   await endDirectChat(db('a'), 'a', id) // 終了済みの再操作で次の会話を解除しない。
-  assert.equal((await getDoc(doc(db('b'), 'activeChats', 'b'))).data().chatId, next)
+  assert.equal((await getDoc(doc(db('c'), 'activeChats', 'c'))).data().chatId, next)
   await assert.rejects(startDirectChat(db('a'), 'a', 'b'))
   await endDirectChat(db('c'), 'c', next)
-  assert.equal(await startDirectChat(db('b'), 'b', 'a'), id)
+  assert.equal(await startDirectChat(db('a'), 'a', 'b'), id)
   assert.equal((await getDocs(collection(db('a'), 'directChats', id, 'messages'))).size, 1)
   await sendDirectMessage(db('b'), id, 'b', '再開')
 })

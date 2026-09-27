@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { collection, doc, getDoc, onSnapshot, orderBy, query, Timestamp } from 'firebase/firestore'
+import { collection, doc, onSnapshot, orderBy, query, Timestamp } from 'firebase/firestore'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { BackIcon, SendIcon, UserIcon } from '../components/icons'
 import nearuLogo from '../assets/nearu-logo.png'
@@ -45,7 +45,6 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
   const [loadError, setLoadError] = useState('')
   const [messageError, setMessageError] = useState('')
   const [sendError, setSendError] = useState('')
-  const [canResolve, setCanResolve] = useState(false)
   const [sending, setSending] = useState(false)
   const sendingRef = useRef(false)
   const threadRef = useRef<HTMLDivElement>(null)
@@ -63,22 +62,8 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
   }), [chatId])
 
   const allowed = Boolean(room?.members.includes(uid))
-
-  useEffect(() => {
-    let cancelled = false
-    if (!room || !allowed || room.status !== 'active') {
-      setCanResolve(false)
-      return
-    }
-    const partnerUid = room.members.find((member) => member !== uid)
-    if (!partnerUid) return
-    void Promise.all([getDoc(doc(db, 'userProfiles', uid)), getDoc(doc(db, 'userProfiles', partnerUid))])
-      .then(([myProfile, partnerProfile]) => {
-        if (!cancelled) setCanResolve(myProfile.data()?.role === 'citizen' && partnerProfile.data()?.role === 'hero')
-      })
-      .catch(() => { if (!cancelled) setCanResolve(false) })
-    return () => { cancelled = true }
-  }, [allowed, room, uid])
+  const isHero = room?.participantRoles[uid] === 'hero'
+  const canFinish = Boolean(room?.requesterUid === uid)
 
   useEffect(() => {
     if (!allowed) return
@@ -113,7 +98,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
   const canSend = allowed && room?.status === 'active' && !changing && !messagesLoading && !messageError
 
   async function changeConversation() {
-    if (!room || !allowed || changePending.current || sendingRef.current) return
+    if (!room || !allowed || !canFinish || changePending.current || sendingRef.current) return
     if (room.status === 'active' && !window.confirm('やり取りを終了しますか？履歴は残り、双方が別の相手とチャットできるようになります。')) return
     changePending.current = true
     setChanging(true)
@@ -127,14 +112,6 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
       changePending.current = false
       setChanging(false)
     }
-  }
-
-  const handleConversationAction = () => {
-    if (room?.status === 'active' && canResolve) {
-      navigate(`/chat/${encodeURIComponent(room.id)}/resolve`)
-      return
-    }
-    void changeConversation()
   }
 
   async function handleSend() {
@@ -163,16 +140,16 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
         <details className="chat-menu">
           <summary aria-label="チャットメニュー"><span aria-hidden="true">⋮</span></summary>
           <div><Link to="/messages">メッセージ一覧</Link>
-            {allowed && <button type="button" disabled={changing || sending} onClick={handleConversationAction}>{room?.status === 'active' ? canResolve ? '解決した' : 'やり取りを終了' : 'やり取りを再開'}</button>}
+            {allowed && canFinish && <button type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{room?.status === 'active' ? '依頼を終了' : '依頼を再開'}</button>}
           </div>
         </details>
       </div>
       {allowed && room && <div className="chat-person">
         <ChatAvatar name={partnerName(room, uid)} />
-        <div><h1>{partnerName(room, uid)}</h1><p>{room.status === 'active' ? 'やり取り中' : '終了した会話'}</p></div>
+        <div><h1>{partnerName(room, uid)}</h1><p>{room.status === 'active' ? isHero ? '市民からの相談に対応中' : 'ヒーローとやり取り中' : isHero ? '終了した相談' : '終了した依頼'}</p></div>
       </div>}
       <header className="chat-header">
-        {allowed && room ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={handleConversationAction}>{changing ? '更新中…' : room.status === 'active' ? canResolve ? '解決した' : 'やり取りを終了' : 'この相手とやり取りを再開'}</button> : <h1>メッセージ</h1>}
+        {allowed && room && canFinish ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{changing ? '更新中…' : room.status === 'active' ? '依頼を終了' : 'この依頼を再開'}</button> : <h1>{isHero ? '市民からの相談' : 'メッセージ'}</h1>}
       </header>
       {changeError && <p className="chat-feedback" role="alert">{changeError}</p>}
       <div className="chat-thread" ref={threadRef} role="log" aria-label="会話履歴" aria-live="polite" aria-relevant="additions text" onScroll={() => {
@@ -199,7 +176,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
       </div>
       {allowed && <>
         <p className="chat-safety"><svg viewBox="0 0 48 54" aria-hidden="true"><path d="M24 3 44 11v16c0 11-13 20-20 24C17 47 4 38 4 27V11Z" fill="#fff" stroke="currentColor" strokeWidth="3" /><path d="m24 9 14 6v12c0 7-8 14-14 18-6-4-14-11-14-18V15Z" fill="#008c76" /><path d="M24 35s-11-7-11-13c0-6 8-7 11-1 3-6 11-5 11 1 0 6-11 13-11 13" fill="white" /></svg><span>個人情報やお金のやり取りはしないでください</span></p>
-        {room?.status !== 'active' && <p className="chat-feedback">やり取りは終了しています。再開するとメッセージを送れます。</p>}
+        {room?.status !== 'active' && <p className="chat-feedback">{isHero ? 'この相談は終了しています。' : 'この依頼は終了しています。再開するとメッセージを送れます。'}</p>}
         {sendError && <p className="chat-feedback" role="alert">{sendError}</p>}
         <form className="chat-input" onSubmit={(event) => { event.preventDefault(); void handleSend() }}>
           <textarea

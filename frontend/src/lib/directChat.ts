@@ -6,13 +6,15 @@ export type DirectChat = {
   id: string
   members: string[]
   names: Record<string, string>
+  participantRoles: Record<string, 'hero' | 'citizen'>
+  requesterUid: string
   status: 'active' | 'closed'
   updatedAt: number
 }
 
 // 長さを含め、区切り文字を含むUIDでも別の組み合わせと衝突させない。
 export function directChatId(a: string, b: string) {
-  return [a, b].sort().map(uid => `${uid.length}:${uid}`).join('')
+  return `v2_${[a, b].sort().map(uid => `${uid.length}:${uid}`).join('')}`
 }
 
 export function readDirectChat(id: string, data: Record<string, unknown>): DirectChat {
@@ -20,6 +22,8 @@ export function readDirectChat(id: string, data: Record<string, unknown>): Direc
     id,
     members: Array.isArray(data.members) ? data.members : [],
     names: (data.names ?? {}) as Record<string, string>,
+    participantRoles: (data.participantRoles ?? {}) as Record<string, 'hero' | 'citizen'>,
+    requesterUid: typeof data.requesterUid === 'string' ? data.requesterUid : '',
     status: data.status === 'active' ? 'active' : 'closed',
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toMillis() : 0,
   }
@@ -49,14 +53,17 @@ export async function startDirectChat(db: Firestore, uid: string, partnerUid: st
     }
     if (room.data()?.status === 'active') return
     if (profiles.some(profile => !profile.exists())) throw new DirectChatError('プロフィールが見つかりません。')
-    if (profiles.every(profile => profile.data()?.role === 'hero')) {
-      throw new DirectChatError('ヒーロー同士ではチャットできません。市民からの相談を待ちましょう。')
-    }
+    const participantRoles = Object.fromEntries(members.map((member, index) => [member,
+      profiles[index].data()?.role === 'hero' ? 'hero' : 'citizen',
+    ])) as Record<string, 'hero' | 'citizen'>
+    if (participantRoles[uid] !== 'citizen') throw new DirectChatError('チャットを開始できるのは市民として利用しているときだけです。')
+    if (participantRoles[partnerUid] !== 'hero') throw new DirectChatError('ヒーローを選択してください。')
     const names = Object.fromEntries(members.map((member, index) => [member,
       String(profiles[index].data()?.profileName || '名前未設定').slice(0, 100),
     ]))
     transaction.set(roomRef, {
       members, names, status: 'active', updatedAt: serverTimestamp(),
+      requesterUid: uid, participantRoles,
       createdAt: room.data()?.createdAt ?? serverTimestamp(),
     })
     lockRefs.forEach(ref => transaction.set(ref, { chatId: id }))
@@ -70,7 +77,7 @@ export async function endDirectChat(db: Firestore, uid: string, id: string) {
     const roomRef = doc(db, 'directChats', id)
     const room = await transaction.get(roomRef)
     const data = room.data()
-    if (!data?.members?.includes(uid)) throw new DirectChatError('この会話を終了できません。')
+    if (!data?.members?.includes(uid) || data.requesterUid !== uid) throw new DirectChatError('依頼を終了できるのは、チャットを始めた市民だけです。')
     if (data.status === 'closed') return
     const refs = (data.members as string[]).map(member => doc(db, 'activeChats', member))
     const locks = await Promise.all(refs.map(ref => transaction.get(ref)))
