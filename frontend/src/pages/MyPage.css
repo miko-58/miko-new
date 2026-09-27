@@ -519,3 +519,15 @@
 .citizen-my-page__reward button { padding: 10px 20px; border: 2px solid #092f2c; border-radius: 12px; background: #f6cc3b; color: #092f2c; font: inherit; font-weight: 800; cursor: pointer; }
 .citizen-my-page__reward button:disabled { opacity: .55; cursor: default; }
 .citizen-my-page__reward-error { color: #9d251c; }
+
+.hero-my-page__fact-icon svg { width: 26px; height: 26px; }
+.hero-my-page__fact > div { min-width: 0; }
+.hero-my-page__activity-card .my-page__activity-icon { display: grid; place-items: center; flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%; background: #fffdf3; }
+.my-page__activity-icon svg { width: 28px; height: 28px; }
+.citizen-my-page__reward-heading { display: flex; align-items: center; gap: 12px; }
+.citizen-my-page__reward-heading .hero-my-page__fact-icon { background: #dcefd7; }
+@media (max-width: 680px) {
+  .hero-my-page__fact-icon svg { width: 22px; height: 22px; }
+  .hero-my-page__activity-card .my-page__activity-icon { width: 36px; height: 36px; }
+  .my-page__activity-icon svg { width: 23px; height: 23px; }
+}
