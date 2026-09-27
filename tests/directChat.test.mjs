@@ -63,6 +63,23 @@ test('hero pairs cannot start a direct chat', async () => {
   batch.set(doc(db('a'), 'activeChats', 'b'), { chatId: id })
   await assertFails(batch.commit())
 })
+test('only a citizen can leave one rating and two result photos for a hero', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'userProfiles', 'a'), { role: 'citizen' }, { merge: true })
+    await setDoc(doc(context.firestore(), 'userProfiles', 'b'), { role: 'hero' }, { merge: true })
+  })
+  const id = await startDirectChat(db('a'), 'a', 'b')
+  const result = doc(db('a'), 'userProfiles', 'b', 'ratings', id)
+  const data = {
+    citizenUid: 'a', rating: 5,
+    outerPhotoUrl: 'https://example.test/result-outer.jpg',
+    innerPhotoUrl: 'https://example.test/result-inner.jpg',
+    createdAt: serverTimestamp(),
+  }
+  await assertSucceeds(setDoc(result, data))
+  await assertFails(setDoc(result, { ...data, rating: 1 }))
+  await assertFails(setDoc(doc(db('b'), 'userProfiles', 'b', 'ratings', id), { ...data, citizenUid: 'b' }))
+})
 for (const endingUser of ['a', 'b']) test(`${endingUser} can end, both locks release, history survives reopening`, async () => {
   const id = await startDirectChat(db('a'), 'a', 'b')
   await sendDirectMessage(db('a'), id, 'a', '残す履歴')

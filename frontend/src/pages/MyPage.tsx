@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { signOut } from 'firebase/auth'
-import { doc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, onSnapshot } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import { auth, db } from '../lib/firebase'
 import { emptyUserStats, readUserStats, type UserStats } from '../lib/userProfile'
@@ -111,6 +111,7 @@ export default function MyPage() {
   const { user, loading } = useAuth()
   const [failedPhotoURL, setFailedPhotoURL] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats>(emptyUserStats)
+  const [receivedRatings, setReceivedRatings] = useState({ sum: 0, count: 0 })
   const [profile, setProfile] = useState<HeroProfile | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
@@ -151,11 +152,27 @@ export default function MyPage() {
     })
   }, [user])
 
+  useEffect(() => {
+    if (!user || profile?.role !== 'hero') {
+      setReceivedRatings({ sum: 0, count: 0 })
+      return
+    }
+    return onSnapshot(collection(db, 'userProfiles', user.uid, 'ratings'), (snapshot) => {
+      const values = snapshot.docs.map((rating) => rating.data().rating).filter((rating): rating is number => typeof rating === 'number' && rating >= 1 && rating <= 5)
+      setReceivedRatings({ sum: values.reduce((total, rating) => total + rating, 0), count: values.length })
+    }, () => setReceivedRatings({ sum: 0, count: 0 }))
+  }, [profile?.role, user])
+
   if (loading) return <p>読み込み中...</p>
   if (!user) return <p>ログインしてください</p>
 
   const displayName = profile?.profileName || user.displayName || '名前未設定'
-  const ratingLabel = stats.ratingCount > 0 ? (stats.ratingSum / stats.ratingCount).toFixed(1) : '—'
+  const displayedStats = {
+    ...stats,
+    ratingSum: stats.ratingSum + receivedRatings.sum,
+    ratingCount: stats.ratingCount + receivedRatings.count,
+  }
+  const ratingLabel = displayedStats.ratingCount > 0 ? (displayedStats.ratingSum / displayedStats.ratingCount).toFixed(1) : '—'
   const statItems = [
     ...(profile?.role !== 'citizen'
       ? [{ kind: 'helped' as const, label: '助けた', value: stats.helpedCount, unit: '件' }]
@@ -171,7 +188,7 @@ export default function MyPage() {
       user={user}
       profile={profile}
       displayName={displayName}
-      stats={stats}
+      stats={displayedStats}
       failedPhotoURL={failedPhotoURL}
       onPhotoError={() => setFailedPhotoURL(user.photoURL)}
       onLogout={() => void handleLogout()}

@@ -256,6 +256,40 @@ service cloud.firestore {
 
       // 回数の更新は、ログイン中の本人に限る。
       allow update: if request.auth != null && request.auth.uid == userId;
+
+      // 市民が、助けてくれたヒーローへ残す完了解決記録。チャットごとに1件だけ作成できる。
+      match /ratings/{chatId} {
+        function room() {
+          return get(/databases/$(database)/documents/directChats/$(chatId)).data;
+        }
+        function isResultParticipant() {
+          return request.auth != null
+            && exists(/databases/$(database)/documents/directChats/$(chatId))
+            && request.auth.uid in room().members;
+        }
+        function isRole(uid, role) {
+          let profile = get(/databases/$(database)/documents/userProfiles/$(uid)).data;
+          return profile.keys().hasAll(['role']) && profile.role == role;
+        }
+        function validCitizenResult() {
+          let data = request.resource.data;
+          return isResultParticipant()
+            && room().status == 'active'
+            && room().members.size() == 2
+            && userId in room().members
+            && request.auth.uid != userId
+            && isRole(request.auth.uid, 'citizen')
+            && isRole(userId, 'hero')
+            && data.keys().hasOnly(['citizenUid', 'rating', 'outerPhotoUrl', 'innerPhotoUrl', 'createdAt'])
+            && data.citizenUid == request.auth.uid
+            && data.rating is int && data.rating >= 1 && data.rating <= 5
+            && data.outerPhotoUrl is string && data.outerPhotoUrl.size() > 0 && data.outerPhotoUrl.size() <= 2048
+            && data.innerPhotoUrl is string && data.innerPhotoUrl.size() > 0 && data.innerPhotoUrl.size() <= 2048
+            && data.createdAt == request.time;
+        }
+        allow read: if request.auth != null && (request.auth.uid == userId || isResultParticipant());
+        allow create: if validCitizenResult();
+      }
     }
   }
 }

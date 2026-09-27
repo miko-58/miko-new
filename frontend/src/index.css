@@ -1247,6 +1247,45 @@ p {
   border-color: var(--accent);
 }
 
+.resolve-camera,
+.resolve-rating {
+  width: min(100%, 420px);
+  margin-top: 24px;
+  padding: 16px;
+  border: 2px solid #10332d;
+  border-radius: 20px;
+  background: #fffdf5;
+  box-shadow: 0 5px 0 #10332d;
+}
+
+.resolve-camera__heading { display: flex; align-items: center; gap: 10px; text-align: left; }
+.resolve-camera__heading > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: #dcefd7; font-size: 22px; }
+.resolve-camera__heading h2, .resolve-camera__heading p, .resolve-rating p, .resolve-rating small { margin: 0; }
+.resolve-camera__heading h2, .resolve-rating p { font-size: 15px; font-weight: 900; }
+.resolve-camera__heading p, .resolve-rating small { margin-top: 2px; color: var(--text-secondary); font-size: 11px; }
+.resolve-camera__previews { position: relative; width: 100%; aspect-ratio: 4 / 3; margin-top: 14px; overflow: hidden; border: 2px solid #10332d; border-radius: 14px; background: linear-gradient(135deg, #dcefd7, #f7f0ce); }
+.resolve-camera__outer { display: grid; width: 100%; height: 100%; place-items: center; color: #49655c; font-size: 14px; font-weight: 800; line-height: 1.5; }
+.resolve-camera__outer img, .resolve-camera__inner img { width: 100%; height: 100%; object-fit: cover; }
+.resolve-camera__inner { position: absolute; right: 10px; bottom: 10px; width: 34%; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border: 3px solid #fffdf5; border-radius: 50%; background: #f6cc3b; box-shadow: 0 2px 0 #10332d; color: #10332d; font-size: 10px; font-weight: 900; line-height: 1.35; }
+.resolve-camera__actions, .resolve-camera__live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.resolve-camera__actions button, .resolve-camera__live-actions button { min-height: 42px; border: 2px solid #10332d; border-radius: 11px; background: #197553; color: #fff; font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
+.resolve-camera__actions button:last-child, .resolve-camera__cancel { background: #f6cc3b !important; color: #10332d !important; }
+.resolve-camera__live { margin-top: 12px; overflow: hidden; border: 2px solid #10332d; border-radius: 14px; background: #102b27; }
+.resolve-camera__live video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.resolve-camera__live-actions { padding: 9px; margin-top: 0; background: #fffdf5; }
+.resolve-camera__error { margin: 10px 0 0; color: #b42318; font-size: 12px; font-weight: 700; line-height: 1.5; text-align: left; }
+.resolve-rating { display: grid; justify-items: center; }
+.resolve-rating .resolve-stars { margin: 8px 0; }
+.resolve-stars__btn { color: #d59e18; }
+.resolve-stars__btn svg { width: 34px; height: 34px; }
+.resolve-footer { border-top: 0; background: #fffdf5; }
+
+@media (max-width: 420px) {
+  .resolve-body { padding: 24px 16px 16px; }
+  .resolve-camera, .resolve-rating { margin-top: 18px; padding: 13px; }
+  .resolve-stars__btn svg { width: 29px; height: 29px; }
+}
+
 /* ---------- My page ---------- */
 
 .page-header--with-action {
