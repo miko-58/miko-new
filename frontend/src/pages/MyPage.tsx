@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { auth, db } from '../lib/firebase'
 import { emptyUserStats, readUserStats, type UserStats } from '../lib/userProfile'
 import BottomNav from '../components/BottomNav'
-import { SettingsIcon } from '../components/icons'
+import { HeartIcon, SettingsIcon, StarIcon, UserIcon } from '../components/icons'
 import './MyPage.css'
 
 type HeroProfile = {
@@ -17,6 +17,12 @@ type HeroProfile = {
   gender: string
 }
 
+function RewardIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 11h16v10H4zM3 7h18v4H3zM12 7v14" />
+    <path d="M12 7H7.5A2.5 2.5 0 1 1 10 4.5L12 7Zm0 0h4.5A2.5 2.5 0 1 0 14 4.5L12 7Z" />
+  </svg>
+}
 function HeroMyPage({
   user,
   profile,
@@ -71,14 +77,15 @@ function HeroMyPage({
         </div>
         <div className="hero-my-page__facts">
           <div className="hero-my-page__fact hero-my-page__fact--reward">
+            <span className="hero-my-page__fact-icon" aria-hidden="true"><RewardIcon /></span>
             <div><p>報酬</p><strong>{profile.reward || '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--skill">
-            {/* <span className="hero-my-page__fact-icon" aria-hidden="true">⚔</span> */}
+            <span className="hero-my-page__fact-icon" aria-hidden="true"><StarIcon /></span>
             <div><p>得意なこと</p><strong>{profile.skills.length ? profile.skills.join('・') : '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--gender">
-            {/* <span className="hero-my-page__fact-icon" aria-hidden="true">●</span> */}
+            <span className="hero-my-page__fact-icon" aria-hidden="true"><UserIcon /></span>
             <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
           </div>
         </div>
@@ -87,11 +94,11 @@ function HeroMyPage({
         <h2 id="hero-activity-title">あなたの活動</h2>
         <div className="hero-my-page__activity-grid">
           <div className="hero-my-page__activity-card hero-my-page__activity-card--helped">
-            {/* <span aria-hidden="true">🤝</span> */}
+            <span className="my-page__activity-icon" aria-hidden="true"><HeartIcon /></span>
             <div><strong>{stats.helpedCount}</strong><p>助けた回数</p></div>
           </div>
           <div className="hero-my-page__activity-card hero-my-page__activity-card--rated">
-            {/* <span aria-hidden="true">★</span> */}
+            <span className="my-page__activity-icon" aria-hidden="true"><StarIcon /></span>
             <div><strong>{stats.ratingCount}</strong><p>評価をもらった数</p></div>
           </div>
         </div>
@@ -129,7 +136,7 @@ function CitizenRewardEditor({ uid, savedReward }: { uid: string; savedReward: s
   }
 
   return <form className="citizen-my-page__reward" onSubmit={(event) => { event.preventDefault(); void save() }}>
-    <label htmlFor="citizen-offered-reward">渡せる報酬（任意）</label>
+    <div className="citizen-my-page__reward-heading"><span className="hero-my-page__fact-icon" aria-hidden="true"><RewardIcon /></span><label htmlFor="citizen-offered-reward">渡せる報酬（任意）</label></div>
     <p id="citizen-reward-hint">報酬として渡せるものがあれば、ご記入ください。空欄でも大丈夫です（300文字以内）。</p>
     <textarea id="citizen-offered-reward" rows={3} maxLength={300} value={value} disabled={saving}
       aria-describedby="citizen-reward-hint" placeholder="例：コーヒー1杯、お菓子など"
@@ -260,6 +267,7 @@ export default function MyPage() {
           {profile && (
             <div className="hero-my-page__facts citizen-my-page__facts">
               <div className="hero-my-page__fact hero-my-page__fact--gender">
+<span className="hero-my-page__fact-icon" aria-hidden="true"><UserIcon /></span>
                 <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
               </div>
               <CitizenRewardEditor key={user.uid} uid={user.uid} savedReward={profile.offeredReward} />
@@ -270,6 +278,7 @@ export default function MyPage() {
           <h2 id="citizen-activity-title">あなたの活動</h2>
           <div className="hero-my-page__activity-grid">
               <div className="hero-my-page__activity-card">
+                <span className="my-page__activity-icon" aria-hidden="true"><HeartIcon /></span>
                 <div>
                   <strong>{stats.helpedByCount}<span className="citizen-my-page__stat-unit">件</span></strong>
                   <p>助けられた</p>
