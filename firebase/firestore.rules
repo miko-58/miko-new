@@ -2,45 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function chatFree(uid) {
-      return !exists(/databases/$(database)/documents/activeChats/$(uid))
-        || get(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == null;
-    }
-    function chatHeldAfter(uid, id) {
-      return getAfter(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == id;
-    }
-    function chatReleasedAfter(uid) {
-      return getAfter(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == null;
-    }
     function isHero(uid) {
       let profile = get(/databases/$(database)/documents/userProfiles/$(uid)).data;
       return profile.keys().hasAll(['role']) && profile.role == 'hero';
     }
     function isCitizen(uid) {
       return !isHero(uid);
-    }
-
-    match /activeChats/{uid} {
-      allow get: if request.auth != null;
-      function starting() {
-        let id = request.resource.data.chatId;
-        let room = getAfter(/databases/$(database)/documents/directChats/$(id)).data;
-        return id is string && room.status == 'active'
-          && uid in room.members && request.auth.uid in room.members
-          && (!exists(/databases/$(database)/documents/directChats/$(id))
-            || get(/databases/$(database)/documents/directChats/$(id)).data.status == 'closed');
-      }
-      function ending() {
-        let id = resource.data.chatId;
-        let room = getAfter(/databases/$(database)/documents/directChats/$(id)).data;
-        return id is string && request.resource.data.chatId == null
-          && room.status == 'closed' && request.auth.uid == room.requesterUid && uid in room.members;
-      }
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['chatId']) && starting();
-      allow update: if request.auth != null
-        && request.resource.data.keys().hasOnly(['chatId'])
-        && ((resource.data.chatId == null && starting()) || ending());
     }
 
     match /directChats/{chatId} {
@@ -74,9 +41,7 @@ service cloud.firestore {
           && request.resource.data.participantRoles[request.auth.uid] == 'citizen'
           && isCitizen(request.auth.uid)
           && ((members[0] == request.auth.uid && request.resource.data.participantRoles[members[1]] == 'hero' && isHero(members[1]))
-            || (members[1] == request.auth.uid && request.resource.data.participantRoles[members[0]] == 'hero' && isHero(members[0])))
-          && chatFree(members[0]) && chatFree(members[1])
-          && chatHeldAfter(members[0], chatId) && chatHeldAfter(members[1], chatId);
+            || (members[1] == request.auth.uid && request.resource.data.participantRoles[members[0]] == 'hero' && isHero(members[0])));
       }
       // 初回開始のトランザクションは未作成の部屋も確認する。
       allow get: if request.auth != null
@@ -94,8 +59,7 @@ service cloud.firestore {
               && request.auth.uid == resource.data.requesterUid)
           || (resource.data.status == 'active' && request.resource.data.status == 'closed'
             && request.auth.uid == resource.data.requesterUid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-            && chatReleasedAfter(resource.data.members[0]) && chatReleasedAfter(resource.data.members[1])));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])));
 
       match /messages/{messageId} {
         function room() {

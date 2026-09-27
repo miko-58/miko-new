@@ -27,7 +27,6 @@ test('pair identity, participant reads, private messages and member query', asyn
   const id = await startDirectChat(db('a'), 'a', 'b')
   assert.equal(await startDirectChat(db('b'), 'b', 'a'), id)
   assert.notEqual(directChatId('a', 'b_c'), directChatId('a_b', 'c'))
-  for (const uid of ['a', 'b']) assert.equal((await getDoc(doc(db(uid), 'activeChats', uid))).data().chatId, id)
   await sendDirectMessage(db('a'), id, 'a', 'こんにちは')
   await assertSucceeds(getDocs(collection(db('b'), 'directChats', id, 'messages')))
   await assertFails(getDoc(doc(db('c'), 'directChats', id)))
@@ -38,17 +37,17 @@ test('pair identity, participant reads, private messages and member query', asyn
   assert.equal(list.size, 1)
   await assertFails(getDocs(collection(db('a'), 'directChats')))
 })
-test('both people are busy; concurrent attempts allow exactly one partner', async () => {
+test('a hero can receive simultaneous conversations from different citizens', async () => {
   const results = await Promise.allSettled([
     startDirectChat(db('a'), 'a', 'b'), startDirectChat(db('c'), 'c', 'b'),
   ])
-  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 2)
   await assert.rejects(startDirectChat(db('b'), 'b', 'd'))
   await assert.rejects(startDirectChat(db('d'), 'd', 'b'))
 })
-test('same user starting two different conversations simultaneously', async () => {
+test('a citizen can start conversations with multiple heroes', async () => {
   const results = await Promise.allSettled([startDirectChat(db('a'), 'a', 'b'), startDirectChat(db('a'), 'a', 'd')])
-  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 2)
 })
 test('hero pairs cannot start a direct chat', async () => {
   await env.withSecurityRulesDisabled(async context => {
@@ -61,8 +60,6 @@ test('hero pairs cannot start a direct chat', async () => {
   batch.set(doc(db('a'), 'directChats', id), {
     members: ['a', 'b'], names: { a: 'a', b: 'b' }, status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
   })
-  batch.set(doc(db('a'), 'activeChats', 'a'), { chatId: id })
-  batch.set(doc(db('a'), 'activeChats', 'b'), { chatId: id })
   await assertFails(batch.commit())
 })
 test('only a citizen can leave one rating and two result photos for a hero', async () => {
@@ -82,34 +79,27 @@ test('only a citizen can leave one rating and two result photos for a hero', asy
   await assertFails(setDoc(result, { ...data, rating: 1 }))
   await assertFails(setDoc(doc(db('b'), 'userProfiles', 'b', 'ratings', id), { ...data, citizenUid: 'b' }))
 })
-test('only the citizen requester can end, both locks release, history survives reopening', async () => {
+test('only the citizen requester can end and history survives reopening', async () => {
   const id = await startDirectChat(db('a'), 'a', 'b')
   await sendDirectMessage(db('a'), id, 'a', '残す履歴')
   await assert.rejects(endDirectChat(db('b'), 'b', id), /始めた市民だけ/)
   await endDirectChat(db('a'), 'a', id)
-  for (const uid of ['a', 'b']) assert.equal((await getDoc(doc(db(uid), 'activeChats', uid))).data().chatId, null)
   await assertFails(sendDirectMessage(db('b'), id, 'b', 'closed'))
   const next = await startDirectChat(db('c'), 'c', 'd')
-  await endDirectChat(db('a'), 'a', id) // 終了済みの再操作で次の会話を解除しない。
-  assert.equal((await getDoc(doc(db('c'), 'activeChats', 'c'))).data().chatId, next)
-  await assert.rejects(startDirectChat(db('a'), 'a', 'b'))
-  await endDirectChat(db('c'), 'c', next)
+  await endDirectChat(db('a'), 'a', id) // 終了済みの再操作で他の会話へ影響しない。
   assert.equal(await startDirectChat(db('a'), 'a', 'b'), id)
+  await endDirectChat(db('c'), 'c', next)
   assert.equal((await getDocs(collection(db('a'), 'directChats', id, 'messages'))).size, 1)
   await sendDirectMessage(db('b'), id, 'b', '再開')
 })
-test('direct writes cannot bypass locks, change participants or delete history', async () => {
+test('direct writes cannot change participants or delete history', async () => {
   const id = await startDirectChat(db('a'), 'a', 'b')
-  await assertFails(setDoc(doc(db('a'), 'activeChats', 'a'), { chatId: null }))
-  await assertFails(deleteDoc(doc(db('a'), 'activeChats', 'a')))
   await assertFails(updateDoc(doc(db('a'), 'directChats', id), { status: 'closed', updatedAt: serverTimestamp() }))
   await assertFails(updateDoc(doc(db('a'), 'directChats', id), { members: ['a', 'c'], updatedAt: serverTimestamp() }))
   await assertFails(deleteDoc(doc(db('a'), 'directChats', id)))
   const other = directChatId('a', 'c')
   const batch = writeBatch(db('a'))
   batch.set(doc(db('a'), 'directChats', other), { members: ['a', 'c'], names: { a: 'a', c: 'c' }, status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
-  batch.set(doc(db('a'), 'activeChats', 'a'), { chatId: other })
-  batch.set(doc(db('a'), 'activeChats', 'c'), { chatId: other })
   await assertFails(batch.commit())
   await assert.rejects(endDirectChat(db('c'), 'c', id))
 })
