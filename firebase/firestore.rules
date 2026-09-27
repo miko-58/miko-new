@@ -12,6 +12,13 @@ service cloud.firestore {
     function chatReleasedAfter(uid) {
       return getAfter(/databases/$(database)/documents/activeChats/$(uid)).data.chatId == null;
     }
+    function isHero(uid) {
+      let profile = get(/databases/$(database)/documents/userProfiles/$(uid)).data;
+      return profile.keys().hasAll(['role']) && profile.role == 'hero';
+    }
+    function chatRolePairAllowed(firstUid, secondUid) {
+      return !(isHero(firstUid) && isHero(secondUid));
+    }
 
     match /activeChats/{uid} {
       allow get: if request.auth != null;
@@ -59,6 +66,7 @@ service cloud.firestore {
         return request.resource.data.status == 'active'
           && exists(/databases/$(database)/documents/userProfiles/$(members[0]))
           && exists(/databases/$(database)/documents/userProfiles/$(members[1]))
+          && chatRolePairAllowed(members[0], members[1])
           && chatFree(members[0]) && chatFree(members[1])
           && chatHeldAfter(members[0], chatId) && chatHeldAfter(members[1], chatId);
       }

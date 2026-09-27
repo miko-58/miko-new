@@ -48,6 +48,21 @@ test('same user starting two different conversations simultaneously', async () =
   const results = await Promise.allSettled([startDirectChat(db('a'), 'a', 'b'), startDirectChat(db('a'), 'a', 'c')])
   assert.equal(results.filter(result => result.status === 'fulfilled').length, 1)
 })
+test('hero pairs cannot start a direct chat', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await Promise.all(['a', 'b'].map(uid => updateDoc(doc(context.firestore(), 'userProfiles', uid), { role: 'hero' })))
+  })
+  await assert.rejects(startDirectChat(db('a'), 'a', 'b'), /ヒーロー同士/)
+
+  const id = directChatId('a', 'b')
+  const batch = writeBatch(db('a'))
+  batch.set(doc(db('a'), 'directChats', id), {
+    members: ['a', 'b'], names: { a: 'a', b: 'b' }, status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  })
+  batch.set(doc(db('a'), 'activeChats', 'a'), { chatId: id })
+  batch.set(doc(db('a'), 'activeChats', 'b'), { chatId: id })
+  await assertFails(batch.commit())
+})
 for (const endingUser of ['a', 'b']) test(`${endingUser} can end, both locks release, history survives reopening`, async () => {
   const id = await startDirectChat(db('a'), 'a', 'b')
   await sendDirectMessage(db('a'), id, 'a', '残す履歴')

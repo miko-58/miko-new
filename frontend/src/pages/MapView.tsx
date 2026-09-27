@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore'
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -49,6 +49,7 @@ export default function MapView() {
   const [heroPins, setHeroPins] = useState<HeroPin[]>([])
   const [heroesLoading, setHeroesLoading] = useState(true)
   const [heroesError, setHeroesError] = useState('')
+  const [viewerRole, setViewerRole] = useState<'hero' | 'citizen' | null>(null)
   const [chatError, setChatError] = useState('')
   const [starting, setStarting] = useState(false)
   const startingRef = useRef(false)
@@ -107,6 +108,16 @@ export default function MapView() {
     locate()
     return () => { active.current = false }
   }, [locate])
+
+  useEffect(() => {
+    if (!user) {
+      setViewerRole(null)
+      return
+    }
+    return onSnapshot(doc(db, 'userProfiles', user.uid), (snapshot) => {
+      setViewerRole(snapshot.data()?.role === 'hero' ? 'hero' : 'citizen')
+    }, () => setViewerRole(null))
+  }, [user])
 
   useEffect(() => {
     const heroesQuery = query(collection(db, 'userProfiles'), where('role', '==', 'hero'))
@@ -183,7 +194,7 @@ export default function MapView() {
                 <span>できること</span>
                 <p>{hero.skills.length > 0 ? hero.skills.join('・') : 'ヒーローとして活動中'}</p>
               </div>
-              <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>このヒーローにチャットする</button>
+              {viewerRole === 'citizen' && <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>このヒーローにチャットする</button>}
             </div>) : !heroesError && <p className="map-page__list-empty">現在、地図上に表示できるヒーローはいません。</p>}
           </div>
         ) : (
@@ -207,7 +218,7 @@ export default function MapView() {
                 <br />
                 {hero.skills.length ? `得意なこと：${hero.skills.join('、')}` : 'ヒーローとして活動中'}
                 <br />
-                <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>{starting ? '接続中…' : 'チャットする'}</button>
+                {viewerRole === 'citizen' && <button type="button" className="map-page__chat" disabled={starting} onClick={() => void openChat(hero.id)}>{starting ? '接続中…' : 'チャットする'}</button>}
               </Popup>
             </CircleMarker>
           ))}
