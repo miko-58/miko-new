@@ -531,3 +531,10 @@
   .hero-my-page__activity-card .my-page__activity-icon { width: 36px; height: 36px; }
   .my-page__activity-icon svg { width: 23px; height: 23px; }
 }
+
+/* ヒーローの3項目を、上段中央に1枚・下段に2枚で配置する。 */
+.hero-my-page__facts:not(.citizen-my-page__facts) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.hero-my-page__facts:not(.citizen-my-page__facts) > .hero-my-page__fact { grid-column: span 2; }
+.hero-my-page__facts:not(.citizen-my-page__facts) > .hero-my-page__fact--gender { grid-column: 2 / span 2; grid-row: 1; }
+.hero-my-page__facts:not(.citizen-my-page__facts) > .hero-my-page__fact--reward { grid-column: 1 / span 2; grid-row: 2; }
+.hero-my-page__facts:not(.citizen-my-page__facts) > .hero-my-page__fact--skill { grid-column: 3 / span 2; grid-row: 2; }

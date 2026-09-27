@@ -81,7 +81,7 @@ function HeroMyPage({
             <div><p>報酬</p><strong>{profile.reward || '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--skill">
-            <span className="hero-my-page__fact-icon" aria-hidden="true"><StarIcon /></span>
+            <span className="hero-my-page__fact-icon" aria-hidden="true">⚔</span>
             <div><p>得意なこと</p><strong>{profile.skills.length ? profile.skills.join('・') : '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--gender">
@@ -267,7 +267,7 @@ export default function MyPage() {
           {profile && (
             <div className="hero-my-page__facts citizen-my-page__facts">
               <div className="hero-my-page__fact hero-my-page__fact--gender">
-<span className="hero-my-page__fact-icon" aria-hidden="true"><UserIcon /></span>
+                <span className="hero-my-page__fact-icon" aria-hidden="true"><UserIcon /></span>
                 <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
               </div>
               <CitizenRewardEditor key={user.uid} uid={user.uid} savedReward={profile.offeredReward} />
