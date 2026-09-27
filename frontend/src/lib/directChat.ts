@@ -54,11 +54,15 @@ export async function startDirectChat(db: Firestore, uid: string, partnerUid: st
     const names = Object.fromEntries(members.map((member, index) => [member,
       String(profiles[index].data()?.profileName || '名前未設定').slice(0, 100),
     ]))
-    transaction.set(roomRef, {
-      members, names, status: 'active', updatedAt: serverTimestamp(),
-      requesterUid: uid, participantRoles,
-      createdAt: room.data()?.createdAt ?? serverTimestamp(),
-    })
+    if (room.exists()) {
+      // 再開時は、開始時に保存した表示名・役割・依頼者を変更しない。
+      transaction.update(roomRef, { status: 'active', updatedAt: serverTimestamp() })
+    } else {
+      transaction.set(roomRef, {
+        members, names, status: 'active', updatedAt: serverTimestamp(),
+        requesterUid: uid, participantRoles, createdAt: serverTimestamp(),
+      })
+    }
   })
   return id
 }
