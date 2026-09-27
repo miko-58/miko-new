@@ -1,3 +1,5 @@
+import { getFirestore } from 'firebase-admin/firestore';
+import { resultPhotoBlobName } from './resultPhotos.js';
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -21,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
-const firebaseApp = getApps().length ? getApps()[0] : initializeApp({
+const firebaseApp = getApps()[0] ?? initializeApp({
   credential: cert({
     projectId: process.env.FIREBASE_PROJECT_ID ?? "",
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? "",
@@ -55,6 +57,39 @@ app.post("/api/photos", upload.single("photo"), async (req, res) => {
   }
 });
 
+// 写真の所有記録はトークン本人のratingsから取得し、期限付きURLを再発行する。
+app.get('/api/result-photos/:chatId', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const authorization = req.header('authorization');
+  if (!authorization?.startsWith('Bearer ')) return res.status(401).json({ error: 'ログインが必要です' });
+  let uid: string;
+  try {
+    uid = (await getAuth(firebaseApp).verifyIdToken(authorization.slice(7))).uid;
+  } catch {
+    return res.status(401).json({ error: 'ログインを確認できませんでした' });
+  }
+  const chatId = req.params.chatId;
+  if (typeof chatId !== 'string' || !chatId || chatId.includes('/') || chatId.length > 1500) {
+    return res.status(400).json({ error: '記録の指定が正しくありません' });
+  }
+  try {
+    const record = await getFirestore(firebaseApp).collection('userProfiles').doc(uid).collection('ratings').doc(chatId).get();
+    if (!record.exists) return res.status(404).json({ error: '写真の記録が見つかりません' });
+    if (!accountName || !accountKey || !containerName) return res.status(503).json({ error: '写真の保存先が設定されていません' });
+    const data = record.data()!;
+    const credential = new StorageSharedKeyCredential(accountName, accountKey);
+    const container = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential).getContainerClient(containerName);
+    const sign = (value: unknown) => {
+      const blobName = resultPhotoBlobName(value, accountName, containerName);
+      const sas = generateBlobSASQueryParameters({ containerName, blobName, permissions: BlobSASPermissions.parse('r'),
+        startsOn: new Date(Date.now() - 300000), expiresOn: new Date(Date.now() + 3600000), protocol: SASProtocol.Https }, credential).toString();
+      return `${container.getBlockBlobClient(blobName).url}?${sas}`;
+    };
+    return res.json({ outerPhotoUrl: sign(data.outerPhotoUrl), innerPhotoUrl: sign(data.innerPhotoUrl) });
+  } catch {
+    return res.status(500).json({ error: '写真を読み込めませんでした' });
+  }
+});
 app.get("/api/health", (req, res) => {
   res.json({
     message: "Express OK!"

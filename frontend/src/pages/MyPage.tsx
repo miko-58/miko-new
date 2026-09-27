@@ -1,3 +1,4 @@
+import HeroMemories from '../components/HeroMemories'
 import { useEffect, useRef, useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
@@ -103,6 +104,7 @@ function HeroMyPage({
           </div>
         </div>
       </section>
+      <HeroMemories key={user.uid} user={user} />
     </div>
     <BottomNav />
   </div>
