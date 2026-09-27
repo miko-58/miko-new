@@ -138,7 +138,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
         <details className="chat-menu">
           <summary aria-label="チャットメニュー"><span aria-hidden="true">⋮</span></summary>
           <div><Link to="/messages">メッセージ一覧</Link>
-            {allowed && <button type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{room?.status === 'active' ? 'やり取りを終了' : 'やり取りを再開'}</button>}
+            {allowed && <button type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{room?.status === 'active' ? '解決した' : 'やり取りを再開'}</button>}
           </div>
         </details>
       </div>
@@ -147,7 +147,7 @@ function ChatRoom({ chatId, uid }: { chatId: string; uid: string }) {
         <div><h1>{partnerName(room, uid)}</h1><p>{room.status === 'active' ? 'やり取り中' : '終了した会話'}</p></div>
       </div>}
       <header className="chat-header">
-        {allowed && room ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{changing ? '更新中…' : room.status === 'active' ? 'やり取りを終了' : 'この相手とやり取りを再開'}</button> : <h1>メッセージ</h1>}
+        {allowed && room ? <button className="chat-session-action" type="button" disabled={changing || sending} onClick={() => void changeConversation()}>{changing ? '更新中…' : room.status === 'active' ? '解決した' : 'この相手とやり取りを再開'}</button> : <h1>メッセージ</h1>}
       </header>
       {changeError && <p className="chat-feedback" role="alert">{changeError}</p>}
       <div className="chat-thread" ref={threadRef} role="log" aria-label="会話履歴" aria-live="polite" aria-relevant="additions text" onScroll={() => {

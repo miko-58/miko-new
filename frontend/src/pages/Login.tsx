@@ -223,7 +223,7 @@ export default function Login() {
 
             {isHero && (
               <fieldset className="profile-fieldset">
-                <legend>🗡️ 得意なこと</legend>
+                <legend>得意なこと</legend>
                 <label className="profile-select">
                   <select value={skill} onChange={(event) => setSkill(event.target.value)}>
                     <option value="">得意なことを選んでください</option>
@@ -237,7 +237,7 @@ export default function Login() {
             )}
 
             <fieldset className="profile-fieldset">
-              <legend>🌟 性別</legend>
+              <legend>性別</legend>
               <div className="profile-option-grid profile-option-grid--three">
                 {['女性', '男性', '回答しない'].map((option) => (
                   <button key={option} type="button" className={`profile-choice${gender === option ? ' is-selected' : ''}`} onClick={() => setGender(option)}>{option}</button>
@@ -247,7 +247,7 @@ export default function Login() {
 
             {isHero && (
               <fieldset className="profile-fieldset">
-                <legend>🪙 ほしいもの <small>（報酬）</small></legend>
+                <legend>ほしいもの <small>（報酬）</small></legend>
                 <label className="profile-select">
                   <select value={reward} onChange={(event) => setReward(event.target.value)}>
                     <option value="">ほしいものを選んでください</option>
