@@ -501,3 +501,10 @@
 .hero-my-page :is(button, a):focus-visible { outline: 3px solid #00a990; outline-offset: 3px; }
 @media (max-width: 680px) { .hero-my-page__content { padding: 13px 14px calc(96px + env(safe-area-inset-bottom, 0px)); } .hero-my-page__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 14px 14px; gap: 9px; } .hero-my-page__fact { gap: 9px; padding: 12px; } .hero-my-page__fact-icon { width: 37px; height: 37px; font-size: 22px; } .hero-my-page__activity-card { min-height: 104px; gap: 10px; padding: 12px; border-width: 2px; border-radius: 16px; } .hero-my-page__activity-card > span { font-size: 31px; } .hero-my-page__activity-card p { font-size: 13px; } }
 @media (min-width: 880px) { .hero-my-page .bottom-nav { display: flex; left: 232px; padding-right: max(16px, calc((100vw - 1272px) / 2)); padding-left: max(16px, calc((100vw - 1272px) / 2)); } }
+
+/* 市民のデータ・操作を保ち、ヒーローと同じカード構成を使用する。 */
+.citizen-my-page__facts { grid-template-columns: minmax(0, 1fr); }
+.citizen-my-page__stat-unit { margin-left: 5px; font-size: 16px; font-weight: 700; }
+.citizen-my-page .hero-my-page__identity h1 { overflow-wrap: anywhere; }
+.citizen-my-page .hero-my-page__activity-card { min-width: 0; text-align: center; }
+.citizen-my-page .hero-my-page__activity-card strong { overflow-wrap: anywhere; }
