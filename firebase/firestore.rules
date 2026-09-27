@@ -16,8 +16,8 @@ service cloud.firestore {
       let profile = get(/databases/$(database)/documents/userProfiles/$(uid)).data;
       return profile.keys().hasAll(['role']) && profile.role == 'hero';
     }
-    function chatRolePairAllowed(firstUid, secondUid) {
-      return !(isHero(firstUid) && isHero(secondUid));
+    function isCitizen(uid) {
+      return !isHero(uid);
     }
 
     match /activeChats/{uid} {
@@ -34,7 +34,7 @@ service cloud.firestore {
         let id = resource.data.chatId;
         let room = getAfter(/databases/$(database)/documents/directChats/$(id)).data;
         return id is string && request.resource.data.chatId == null
-          && room.status == 'closed' && request.auth.uid in room.members && uid in room.members;
+          && room.status == 'closed' && request.auth.uid == room.requesterUid && uid in room.members;
       }
       allow create: if request.auth != null
         && request.resource.data.keys().hasOnly(['chatId']) && starting();
@@ -49,16 +49,20 @@ service cloud.firestore {
       }
       function validRoom() {
         let data = request.resource.data;
-        return data.keys().hasOnly(['members', 'names', 'status', 'createdAt', 'updatedAt'])
+        return data.keys().hasOnly(['members', 'names', 'participantRoles', 'requesterUid', 'status', 'createdAt', 'updatedAt'])
           && data.members is list && data.members.size() == 2
           && data.members[0] is string && data.members[1] is string
           && data.members[0] < data.members[1]
-          && chatId == string(data.members[0].size()) + ':' + data.members[0]
+          && chatId == 'v2_' + string(data.members[0].size()) + ':' + data.members[0]
             + string(data.members[1].size()) + ':' + data.members[1]
           && request.auth.uid in data.members
           && data.names is map && data.names.keys().hasOnly(data.members)
           && data.names[data.members[0]] is string && data.names[data.members[0]].size() <= 100
           && data.names[data.members[1]] is string && data.names[data.members[1]].size() <= 100
+          && data.participantRoles is map && data.participantRoles.keys().hasOnly(data.members)
+          && data.participantRoles[data.members[0]] in ['hero', 'citizen']
+          && data.participantRoles[data.members[1]] in ['hero', 'citizen']
+          && data.requesterUid is string && data.requesterUid in data.members
           && data.updatedAt == request.time;
       }
       function starting() {
@@ -66,7 +70,11 @@ service cloud.firestore {
         return request.resource.data.status == 'active'
           && exists(/databases/$(database)/documents/userProfiles/$(members[0]))
           && exists(/databases/$(database)/documents/userProfiles/$(members[1]))
-          && chatRolePairAllowed(members[0], members[1])
+          && request.resource.data.requesterUid == request.auth.uid
+          && request.resource.data.participantRoles[request.auth.uid] == 'citizen'
+          && isCitizen(request.auth.uid)
+          && ((members[0] == request.auth.uid && request.resource.data.participantRoles[members[1]] == 'hero' && isHero(members[1]))
+            || (members[1] == request.auth.uid && request.resource.data.participantRoles[members[0]] == 'hero' && isHero(members[0])))
           && chatFree(members[0]) && chatFree(members[1])
           && chatHeldAfter(members[0], chatId) && chatHeldAfter(members[1], chatId);
       }
@@ -78,9 +86,14 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow update: if participant() && validRoom()
         && request.resource.data.members == resource.data.members
+        && request.resource.data.names == resource.data.names
+        && request.resource.data.participantRoles == resource.data.participantRoles
+        && request.resource.data.requesterUid == resource.data.requesterUid
         && request.resource.data.createdAt == resource.data.createdAt
-        && ((resource.data.status == 'closed' && starting())
+        && ((resource.data.status == 'closed' && starting()
+              && request.auth.uid == resource.data.requesterUid)
           || (resource.data.status == 'active' && request.resource.data.status == 'closed'
+            && request.auth.uid == resource.data.requesterUid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
             && chatReleasedAfter(resource.data.members[0]) && chatReleasedAfter(resource.data.members[1])));
 
