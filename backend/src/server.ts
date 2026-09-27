@@ -1,10 +1,14 @@
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
+import dotenv from "dotenv";
 import multer from "multer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { BlobServiceClient, BlobSASPermissions, generateBlobSASQueryParameters, SASProtocol, StorageSharedKeyCredential } from "@azure/storage-blob";
+
+// 開発環境では .env.local を優先し、共有用の .env がある場合は不足分だけ補う。
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
