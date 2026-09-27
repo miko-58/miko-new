@@ -77,15 +77,14 @@ function HeroMyPage({
         </div>
         <div className="hero-my-page__facts">
           <div className="hero-my-page__fact hero-my-page__fact--reward">
-            <span className="hero-my-page__fact-icon" aria-hidden="true">◉</span>
             <div><p>報酬</p><strong>{profile.reward || '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--skill">
-            <span className="hero-my-page__fact-icon" aria-hidden="true">⚔</span>
+            {/* <span className="hero-my-page__fact-icon" aria-hidden="true">⚔</span> */}
             <div><p>得意なこと</p><strong>{profile.skills.length ? profile.skills.join('・') : '未登録'}</strong></div>
           </div>
           <div className="hero-my-page__fact hero-my-page__fact--gender">
-            <span className="hero-my-page__fact-icon" aria-hidden="true">●</span>
+            {/* <span className="hero-my-page__fact-icon" aria-hidden="true">●</span> */}
             <div><p>性別</p><strong>{profile.gender || '未登録'}</strong></div>
           </div>
         </div>
@@ -94,11 +93,11 @@ function HeroMyPage({
         <h2 id="hero-activity-title">あなたの活動</h2>
         <div className="hero-my-page__activity-grid">
           <div className="hero-my-page__activity-card hero-my-page__activity-card--helped">
-            <span aria-hidden="true">🤝</span>
+            {/* <span aria-hidden="true">🤝</span> */}
             <div><strong>{stats.helpedCount}</strong><p>助けた回数</p></div>
           </div>
           <div className="hero-my-page__activity-card hero-my-page__activity-card--rated">
-            <span aria-hidden="true">★</span>
+            {/* <span aria-hidden="true">★</span> */}
             <div><strong>{stats.ratingCount}</strong><p>評価をもらった数</p></div>
           </div>
         </div>
