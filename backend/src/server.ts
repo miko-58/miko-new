@@ -1,10 +1,14 @@
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
+import dotenv from "dotenv";
 import multer from "multer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { BlobServiceClient, BlobSASPermissions, generateBlobSASQueryParameters, SASProtocol, StorageSharedKeyCredential } from "@azure/storage-blob";
+
+// 個人の秘密情報はGit管理外の .env.local に置き、共有用 .env は不足分だけ補う。
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
