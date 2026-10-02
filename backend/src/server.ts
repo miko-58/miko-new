@@ -1,5 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { resultPhotoBlobName } from './resultPhotos.js';
+import { cloudinaryConfig, signCloudinaryPhoto, uploadCloudinaryPhoto } from './cloudinaryPhotos.js';
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -38,21 +39,18 @@ app.post("/api/photos", upload.single("photo"), async (req, res) => {
   try {
     const authorization = req.header("authorization");
     if (!authorization?.startsWith("Bearer ")) return res.status(401).json({ error: "ログインが必要です" });
-    await getAuth(firebaseApp).verifyIdToken(authorization.slice("Bearer ".length));
+    try {
+      await getAuth(firebaseApp).verifyIdToken(authorization.slice("Bearer ".length));
+    } catch {
+      return res.status(401).json({ error: 'ログインを確認できませんでした' });
+    }
     if (!req.file) return res.status(400).json({ error: "写真がありません" });
-    if (!accountName || !accountKey || !containerName) return res.status(500).json({ error: "Azure設定がありません" });
+    try { cloudinaryConfig(); } catch {
+      return res.status(503).json({ error: 'Cloudinaryの接続設定がありません。管理者に確認してください。' });
+    }
     if (!req.file.mimetype.startsWith("image/")) return res.status(400).json({ error: "画像のみアップロードできます" });
-    const credential = new StorageSharedKeyCredential(accountName, accountKey);
-    const service = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential);
-    const blobName = `posts/${crypto.randomUUID()}.jpg`;
-    const blob = service.getContainerClient(containerName).getBlockBlobClient(blobName);
-    await blob.uploadData(req.file.buffer, { blobHTTPHeaders: { blobContentType: req.file.mimetype } });
-    const startsOn = new Date(Date.now() - 5 * 60 * 1000);
-    const expiresOn = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const sas = generateBlobSASQueryParameters({ containerName, blobName, permissions: BlobSASPermissions.parse("r"), startsOn, expiresOn, protocol: SASProtocol.Https }, credential).toString();
-    res.json({ blobName, imageUrl: `${blob.url}?${sas}` });
-  } catch (error) {
-    console.error(error);
+    res.json(await uploadCloudinaryPhoto(req.file.buffer));
+  } catch {
     res.status(500).json({ error: "写真を保存できませんでした" });
   }
 });
@@ -75,11 +73,12 @@ app.get('/api/result-photos/:chatId', async (req, res) => {
   try {
     const record = await getFirestore(firebaseApp).collection('userProfiles').doc(uid).collection('ratings').doc(chatId).get();
     if (!record.exists) return res.status(404).json({ error: '写真の記録が見つかりません' });
-    if (!accountName || !accountKey || !containerName) return res.status(503).json({ error: '写真の保存先が設定されていません' });
     const data = record.data()!;
-    const credential = new StorageSharedKeyCredential(accountName, accountKey);
-    const container = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential).getContainerClient(containerName);
     const sign = (value: unknown) => {
+      if (typeof value === 'string' && new URL(value).hostname === 'res.cloudinary.com') return signCloudinaryPhoto(value);
+      if (!accountName || !accountKey || !containerName) throw new Error('Azure settings missing');
+      const credential = new StorageSharedKeyCredential(accountName, accountKey);
+      const container = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, credential).getContainerClient(containerName);
       const blobName = resultPhotoBlobName(value, accountName, containerName);
       const sas = generateBlobSASQueryParameters({ containerName, blobName, permissions: BlobSASPermissions.parse('r'),
         startsOn: new Date(Date.now() - 300000), expiresOn: new Date(Date.now() + 3600000), protocol: SASProtocol.Https }, credential).toString();
