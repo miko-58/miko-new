@@ -4,6 +4,7 @@
   "description": "API server for Inclusive Map",
   "main": "dist/server.js",
   "scripts": {
+    "check:photos": "node scripts/check-photo-storage.mjs",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@azure/storage-blob": "^12.34.0",
     "@types/multer": "^2.2.0",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
