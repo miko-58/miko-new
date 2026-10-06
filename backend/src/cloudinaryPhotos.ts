@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { v2 as cloudinary } from 'cloudinary';
+import {
+  v2 as cloudinary,
+  type UploadApiErrorResponse,
+  type UploadApiResponse,
+} from 'cloudinary';
 
 export function cloudinaryConfig() {
   const cloud_name = process.env.CLOUDINARY_CLOUD_NAME?.trim();
@@ -30,7 +34,7 @@ export async function uploadCloudinaryPhoto(buffer: Buffer) {
     const stream = cloudinary.uploader.upload_stream({
       ...config, public_id: publicId, resource_type: 'image', type: 'authenticated',
       format: 'jpg', overwrite: false, timeout: 60000,
-    }, (error, result) => {
+    }, (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
       if (error || !result) reject(new Error('Cloudinary upload failed'));
       else resolve(result);
     });
